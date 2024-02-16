@@ -16,14 +16,12 @@ CompileDaemon -command="go run main.go"
 
 go run main.go
 
-## Contributing
+## Package Documentations
 
-Specify guidelines for contributing to your project.
+https://gin-gonic.com/docs/
 
-## License
+https://gorm.io/docs/
 
-Indicate the license under which your project is distributed.
+https://github.com/joho/godotenv
 
-## Contact
-
-Provide contact information for users to reach out to you.
+https://github.com/githubnemo/CompileDaemon
