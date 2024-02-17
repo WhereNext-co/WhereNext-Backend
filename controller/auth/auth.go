@@ -17,10 +17,9 @@ var hmacSampleSecret []byte
 
 // Binding from JSON
 type RegisterBody struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
-	Fullname string `json:"fullname" binding:"required"`
-	Avatar   string `json:"avatar" binding:"required"`
+	TelNo    string `json:"tel_no" binding:"required"`
 }
 
 func Register(c *gin.Context) {
@@ -30,16 +29,16 @@ func Register(c *gin.Context) {
 		return
 	}
 	// Check User Exists
-	var userExist database.User
-	database.Db.Where("username = ?", json.Username).First(&userExist)
+	var userExist database.UserAuth
+	database.Db.Where("email = ?", json.Email).First(&userExist)
 	if userExist.ID > 0 {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "User Exists"})
 		return
 	}
 	// Create User
 	encryptedPassword, _ := bcrypt.GenerateFromPassword([]byte(json.Password), 10)
-	user := database.User{Username: json.Username, Password: string(encryptedPassword),
-		Fullname: json.Fullname, Avatar: json.Avatar}
+	user := database.UserAuth{Email: json.Email, Password: string(encryptedPassword),
+		TelNo: json.TelNo}
 	database.Db.Create(&user)
 	if user.ID > 0 {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "User Create Success", "userId": user.ID})
@@ -50,7 +49,7 @@ func Register(c *gin.Context) {
 
 // Binding from JSON
 type LoginBody struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -61,8 +60,8 @@ func Login(c *gin.Context) {
 		return
 	}
 	// Check User Exists
-	var userExist database.User
-	database.Db.Where("username = ?", json.Username).First(&userExist)
+	var userExist database.UserAuth
+	database.Db.Where("email = ?", json.Email).First(&userExist)
 	if userExist.ID == 0 {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "User Does Not Exists"})
 		return

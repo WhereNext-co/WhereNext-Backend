@@ -18,5 +18,5 @@ func InitDB() {
 	}
 
 	// Migrate the schema
-	Db.AutoMigrate(&User{})
+	Db.AutoMigrate(&UserAuth{})
 }

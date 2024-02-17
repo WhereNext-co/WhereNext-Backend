@@ -4,10 +4,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type UserAuth struct {
 	gorm.Model
-	Username string
+	Email    string
 	Password string
-	Fullname string
-	Avatar   string
+	TelNo    string
 }
