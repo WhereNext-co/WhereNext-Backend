@@ -20,3 +20,5 @@ func Profile(c *gin.Context) {
 	database.Db.First(&user, userId)
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "User Read Success", "user": user})
 }
+
+
