@@ -9,7 +9,10 @@ require (
 	gorm.io/gorm v1.25.7
 )
 
-require github.com/kr/text v0.2.0 // indirect
+require (
+	github.com/kr/text v0.2.0 // indirect
+	gorm.io/datatypes v1.2.0 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.10.2 // indirect
