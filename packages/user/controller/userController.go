@@ -9,8 +9,9 @@ import (
 )
 
 type UserControllerInterface interface {
-	CreateUser(w http.ResponseWriter, r *http.Request)
+	CreateUser(c *gin.Context)
 	FindUser(c *gin.Context)
+	CreateUserInfo(c *gin.Context)
 }	
 
 type UserController struct {
@@ -23,8 +24,32 @@ func NewUserController(userService userService.UserServiceInterface) *UserContro
 	}
 }
 
-func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (uc *UserController) CreateUser(c *gin.Context) {
 	// Implement the logic to create a user
+}
+
+func (uc *UserController) CreateUserInfo(c *gin.Context) {
+    var user struct {
+        Title           string `json:"title"`
+        Name            string `json:"name"`
+        Birthdate       string `json:"birthdate"`
+        Region          string `json:"region"`
+        TelNo           string `json:"telNo"`
+        ProfilePicture  string `json:"profilePicture"`
+    }
+
+    if err := c.ShouldBindJSON(&user); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+        return
+    }
+
+    err := uc.userService.CreateUserInfo(user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
 func (uc *UserController) FindUser(c *gin.Context) {

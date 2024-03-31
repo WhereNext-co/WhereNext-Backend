@@ -25,6 +25,8 @@ func InitServer() {
 	// authorized.GET("/profile", UserController.Profile)
 
 	r.GET("/users", userController.FindUser)
+	r.POST("/users/create", userController.CreateUser)
+	r.POST("/users/create-info", userController.CreateUserInfo)
 	r.Run(":3000")
 }
 
