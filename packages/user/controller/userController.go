@@ -12,6 +12,7 @@ type UserControllerInterface interface {
 	CreateUser(c *gin.Context)
 	FindUser(c *gin.Context)
 	CreateUserInfo(c *gin.Context)
+	CreateFirebaseUser(c *gin.Context)
 }	
 
 type UserController struct {
@@ -28,6 +29,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 	// Implement the logic to create a user
 }
 
+//CreateUserInfo at database
 func (uc *UserController) CreateUserInfo(c *gin.Context) {
     var user struct {
         Title           string `json:"title"`

@@ -26,6 +26,7 @@ func (u *userService) CreateUser(email string, password string, telNo string) {
 	u.userRepo.CreateUser(email, password, telNo)
 }
 
+
 func (s *userService) CreateUserInfo(title string, name string, birthdate string, region string, telNo string, profilePicture string) error {
     parsedBirthdate, err := time.Parse("2006-01-02", birthdate)
     if err != nil {
