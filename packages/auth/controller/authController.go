@@ -1,4 +1,4 @@
-package authController
+package controller
 
 import (
 	"net/http"
@@ -28,11 +28,18 @@ func (uc *authController) CreateFirebaseUser(c *gin.Context) {
     }
 
     // Call the CreateFirebaseUser method in the userService
-    user, err := uc.authService.CreateFirebaseUser(telNo)
+    user, password, err := uc.authService.CreateFirebaseUser(telNo)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"uid": user.UID, "email": user.Email})
+    // Send OTP via SMS using Twilio
+    err = uc.authService.SendOTP(telNo, password)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending OTP"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"uid": user.UID, "email": user.Email, "password": password})
 }

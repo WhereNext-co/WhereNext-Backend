@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"os"
 
 	"github.com/WhereNext-co/WhereNext-Backend.git/database"
 	auth "github.com/WhereNext-co/WhereNext-Backend.git/packages/auth"
@@ -12,6 +13,7 @@ import (
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/twilio/twilio-go"
 )
 
 func InitServer() {
@@ -22,8 +24,17 @@ func InitServer() {
 	 if err != nil {
 		 log.Fatalf("error initializing Firebase: %v", err)
 	 }
+
+	// Initialize Twilio
+	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
+	twilioAuthToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	twilioClient := twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: twilioAccountSid,
+		Password: twilioAuthToken,
+	})
+
 	// Initialize the Authentication services and controllers
-	authService := authService.NewAuthService(authClient)
+	authService := authService.NewAuthService(authClient, twilioClient)
 	authController := authController.NewAuthController(authService)
 	// Initialize the User services and controllers
 	userService := userService.NewUserService(userRepo)
