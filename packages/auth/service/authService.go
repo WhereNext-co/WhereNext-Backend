@@ -14,6 +14,7 @@ import (
 
 type AuthServiceInterface interface {
     CreateFirebaseUser(email string) (*firebaseAuth.UserRecord, string, error)
+    UpdateFirebaseUserPassword(ctx context.Context, telNo string) (string, error)
     SendOTP(telNo string, otp string) error
 }
 
@@ -47,6 +48,37 @@ func (us *authService) CreateFirebaseUser(telNo string) (*firebaseAuth.UserRecor
     }
 
     return user, password, nil
+}
+
+// UpdateFirebaseUserPassword updates the password for a Firebase user with the given phone number.
+func (us *authService) UpdateFirebaseUserPassword(ctx context.Context, telNo string) (string, error) {
+    // Concatenate @wherenext.com to the telephone number
+    email := telNo + "@wherenext.com"
+
+    // Generate a new random password
+    randNumber := rand.New(rand.NewSource(time.Now().UnixNano()))
+    newPassword := fmt.Sprintf("%06d", randNumber.Intn(1000000))
+
+    // Get the user by email
+    user, err := us.authClient.FirebaseAuthClient.GetUserByEmail(ctx, email)
+    if err != nil {
+        return "", fmt.Errorf("error getting user: %v", err)
+    }
+
+    // Check if the user was found
+    if user == nil {
+        return "", fmt.Errorf("no user found with email: %v", email)
+    }
+
+    // Update the user's password
+    params := (&firebaseAuth.UserToUpdate{}).Password(newPassword)
+    _, err = us.authClient.FirebaseAuthClient.UpdateUser(ctx, user.UID, params)
+    if err != nil {
+        return "", fmt.Errorf("error updating user password: %v", err)
+    }
+
+    // Return the new password
+    return newPassword, nil
 }
 
 func (us *authService) SendOTP(telNo string, otp string) error {

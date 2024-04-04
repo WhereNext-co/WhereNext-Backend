@@ -49,7 +49,11 @@ func InitServer() {
 	// authorized.GET("/readall", UserController.ReadAll)
 	// authorized.GET("/profile", UserController.Profile)
 
+	// Auth routes
 	r.POST("/auth/createFirebaseUser", authController.CreateFirebaseUser)
+	r.POST("/auth/updateFirebaseUserPassword", authController.UpdateFirebaseUserPassword)
+
+	// User routes
 	r.GET("/users", userController.FindUser)
 	r.POST("/users/create", userController.CreateUser)
 	r.POST("/users/create-info", userController.CreateUserInfo)
