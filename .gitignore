@@ -20,5 +20,8 @@
 # Go workspace file
 go.work
 
+# Ignore Firebase credential file
+/packages/auth/wherenext-24624-firebase-adminsdk-accountkey.json
+
 # Environment variables file
 .env
