@@ -64,3 +64,8 @@ type Wishlist struct {
 	LocationId uint     `gorm:"primaryKey"`
 	Location   Location `gorm:"foreignKey:LocationId"`
 }
+
+type Friend struct {
+	UserID   uint
+	FriendID uint
+}
