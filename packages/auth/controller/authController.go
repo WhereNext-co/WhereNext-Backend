@@ -23,7 +23,15 @@ func NewAuthController(authService authService.AuthServiceInterface) *authContro
 
 // CreateFirebaseUser creates a new Firebase user
 func (uc *authController) CreateFirebaseUser(c *gin.Context) {
-    telNo := c.PostForm("telNo")
+    type TelNo struct {
+        TelNo string `json:"telNo"`
+    }
+    var json TelNo
+    if err := c.BindJSON(&json); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body, expected JSON"})
+        return
+    }
+telNo := json.TelNo
     if telNo == "" {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Telephone number is required"})
         return
@@ -48,7 +56,15 @@ func (uc *authController) CreateFirebaseUser(c *gin.Context) {
 
 // UpdateUserPassword updates a user's password and sends an OTP
 func (uc *authController) UpdateFirebaseUserPassword(c *gin.Context) {
-    telNo := c.PostForm("telNo")
+    type TelNo struct {
+        TelNo string `json:"telNo"`
+    }
+    var json TelNo
+    if err := c.BindJSON(&json); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body, expected JSON"})
+        return
+    }
+telNo := json.TelNo
     if telNo == "" {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Telephone number is required"})
         return
