@@ -54,9 +54,8 @@ func InitServer() {
 	r.POST("/auth/updateFirebaseUserPassword", authController.UpdateFirebaseUserPassword)
 
 	// User routes
-	r.GET("/users", userController.FindUser)
-	r.POST("/users/create", userController.CreateUser)
 	r.POST("/users/create-info", userController.CreateUserInfo)
+	r.POST("/users/check-username", userController.CheckUserName)
 	r.Run(":3000")
 }
 

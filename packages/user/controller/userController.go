@@ -1,7 +1,6 @@
 package userController
 
 import (
-	"log"
 	"net/http"
 
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
@@ -9,10 +8,8 @@ import (
 )
 
 type UserControllerInterface interface {
-	CreateUser(c *gin.Context)
-	FindUser(c *gin.Context)
 	CreateUserInfo(c *gin.Context)
-	CreateFirebaseUser(c *gin.Context)
+	CheckUserName(c *gin.Context)
 }	
 
 type UserController struct {
@@ -25,19 +22,18 @@ func NewUserController(userService userService.UserServiceInterface) *UserContro
 	}
 }
 
-func (uc *UserController) CreateUser(c *gin.Context) {
-	// Implement the logic to create a user
-}
-
 //CreateUserInfo at database
 func (uc *UserController) CreateUserInfo(c *gin.Context) {
     var user struct {
+        UserName        string `json:"userName"`
+        Email           string `json:"email"`
         Title           string `json:"title"`
         Name            string `json:"name"`
         Birthdate       string `json:"birthdate"`
         Region          string `json:"region"`
         TelNo           string `json:"telNo"`
         ProfilePicture  string `json:"profilePicture"`
+        Bio             string `json:"bio"`
     }
 
     if err := c.ShouldBindJSON(&user); err != nil {
@@ -45,7 +41,7 @@ func (uc *UserController) CreateUserInfo(c *gin.Context) {
         return
     }
 
-    err := uc.userService.CreateUserInfo(user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture)
+    err := uc.userService.CreateUserInfo(user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
         return
@@ -54,12 +50,21 @@ func (uc *UserController) CreateUserInfo(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
-func (uc *UserController) FindUser(c *gin.Context) {
-	log.Println(c.Query("email"))
-	user := uc.userService.FindUser(c.Query("email"))
-	if user.Email == "" {
-		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "User not found"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "User Read Success", "user": user})
+func (uc *UserController) CheckUserName(c *gin.Context) {
+    var request struct {
+        UserName string `json:"userName"`
+    }
+
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+        return
+    }
+
+    exists, err := uc.userService.CheckUserName(request.UserName)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check username"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"exists": exists})
 }
