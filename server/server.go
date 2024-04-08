@@ -13,10 +13,16 @@ import (
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/twilio/twilio-go"
 )
 
 func InitServer() {
+	 // Load .env file
+	 err := godotenv.Load()
+	 if err != nil {
+		 log.Fatal("Fail to .env file")
+	 }
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
 	 // Initialize Firebase
@@ -56,6 +62,7 @@ func InitServer() {
 	// User routes
 	r.POST("/users/create-info", userController.CreateUserInfo)
 	r.POST("/users/check-username", userController.CheckUserName)
-	r.Run(":3000")
+	port := os.Getenv("PORT")
+	r.Run(":"+port)
 }
 
