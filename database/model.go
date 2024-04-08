@@ -16,12 +16,15 @@ type UserAuth struct {
 
 type User struct {
 	gorm.Model
+	UserName string `gorm:"unique;not null"`
+	Email    string `gorm:"unique"`
 	Title          string
 	Name           string
 	Birthdate      time.Time
 	Region         string
-	TelNo          string
+	TelNo          string `gorm:"unique;not null"`
 	ProfilePicture string
+	Bio string
 	Friends        []User     `gorm:"many2many:UserProfile"`
 	Schedules      []Schedule `gorm:"many2many:Invitee"`
 }
