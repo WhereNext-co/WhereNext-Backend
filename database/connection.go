@@ -28,7 +28,7 @@ func InitDB() *gorm.DB {
 	}
 
 	// Migrate the schema
-	err = Db.AutoMigrate(&UserAuth{}, &User{}, &Schedule{}, &Wishlist{}, &Location{})
+	err = Db.AutoMigrate(&UserAuth{}, &User{}, &Location{}, &Schedule{}, &Wishlist{}, &FriendRequest{})
 	if err != nil {
 		panic("failed to migrate schema: " + err.Error())
 	}

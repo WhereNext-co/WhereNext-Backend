@@ -16,17 +16,19 @@ type UserAuth struct {
 
 type User struct {
 	gorm.Model
-	UserName string `gorm:"unique;not null"`
-	Email    string `gorm:"unique"`
-	Title          string
-	Name           string
-	Birthdate      time.Time
-	Region         string
-	TelNo          string `gorm:"unique;not null"`
-	ProfilePicture string
-	Bio string
-	Friends        []User     `gorm:"many2many:UserProfile"`
-	Schedules      []Schedule `gorm:"many2many:Invitee"`
+	UserName         string `gorm:"unique;not null"`
+	Email            string `gorm:"unique"`
+	Title            string
+	Name             string
+	Birthdate        time.Time
+	Region           string
+	TelNo            string `gorm:"unique;not null"`
+	ProfilePicture   string
+	Bio              string
+	Friends          []User          `gorm:"many2many:UserProfile"`
+	Schedules        []Schedule      `gorm:"many2many:Invitee"`
+	RequestsSent     []FriendRequest `gorm:"foreignKey:SenderID"`
+	RequestsReceived []FriendRequest `gorm:"foreignKey:ReceiverID"`
 }
 
 type Schedule struct {
@@ -68,7 +70,11 @@ type Wishlist struct {
 	Location   Location `gorm:"foreignKey:LocationId"`
 }
 
-type Friend struct {
-	UserID   uint
-	FriendID uint
+type FriendRequest struct {
+	gorm.Model
+	SenderID   uint
+	Sender     User `gorm:"foreignKey:SenderID"`
+	ReceiverID uint
+	Receiver   User `gorm:"foreignKey:ReceiverID"`
+	Status     string
 }
