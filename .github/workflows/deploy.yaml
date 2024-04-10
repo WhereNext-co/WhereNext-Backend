@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - master
 
 env:
   IMAGE_NAME: ghcr.io/wherenext-co/wherenext-backend
