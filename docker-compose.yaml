@@ -9,5 +9,6 @@ services:
       - GIN_MODE=release
     volumes:
       - ./wherenext-24624-firebase-adminsdk-accountkey.json:/run/secrets/firebase_credentials
+      - ./.env:/app/.env
     env_file:
       - .env
