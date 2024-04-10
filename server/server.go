@@ -13,10 +13,16 @@ import (
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/twilio/twilio-go"
 )
 
 func InitServer() {
+	 // Load .env file
+	 err := godotenv.Load()
+	 if err != nil {
+		 log.Fatal("Fail to .env file")
+	 }
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
 	// Initialize Firebase
@@ -68,7 +74,8 @@ func InitServer() {
 	r.DELETE("/users/friendrequest/decline", userController.DeclineFriendRequest)
 	r.DELETE("/users/friendrequest/cancel", userController.CancelFriendRequest)
 	r.GET("/users/friendrequest", userController.RequestsReceived)
-	r.Run(":3000")
+	port := os.Getenv("PORT")
+	r.Run(":"+port)
 }
 
 // All New Endpoints
