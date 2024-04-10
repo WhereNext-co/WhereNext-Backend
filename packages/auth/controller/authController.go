@@ -80,9 +80,9 @@ telNo := json.TelNo
     // Send OTP via SMS using Twilio
     err = uc.authService.SendOTP(telNo, newPassword)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending OTP to twilio"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending OTP"})
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"telNo": telNo, "message": "Password updated and OTP sent to twilio"})
+    c.JSON(http.StatusOK, gin.H{"telNo": telNo, "message": "Password updated and OTP sent"})
 }
