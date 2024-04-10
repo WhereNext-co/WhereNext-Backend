@@ -25,11 +25,11 @@ func InitServer() {
 	 }
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
-	 // Initialize Firebase
-	 authClient, err := auth.InitializeFirebase()
-	 if err != nil {
-		 log.Fatalf("error initializing Firebase: %v", err)
-	 }
+	// Initialize Firebase
+	authClient, err := auth.InitializeFirebase()
+	if err != nil {
+		log.Fatalf("error initializing Firebase: %v", err)
+	}
 
 	// Initialize Twilio
 	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
@@ -62,7 +62,26 @@ func InitServer() {
 	// User routes
 	r.POST("/users/create-info", userController.CreateUserInfo)
 	r.POST("/users/check-username", userController.CheckUserName)
+	r.GET("/users/profile", userController.FindUser)
+	r.PUT("/users/profile", userController.UpdateUserInfo)
+	// Friend routes
+	r.GET("/users/friends", userController.FriendList)
+	r.GET("/users/friends/isfriend", userController.IsFriend)
+	r.DELETE("/users/friends", userController.RemoveFriend)
+	// Friend request routes
+	r.POST("/users/friendrequest", userController.CreateFriendRequest)
+	r.PUT("/users/friendrequest", userController.AcceptFriendRequest)
+	r.DELETE("/users/friendrequest/decline", userController.DeclineFriendRequest)
+	r.DELETE("/users/friendrequest/cancel", userController.CancelFriendRequest)
+	r.GET("/users/friendrequest", userController.RequestsReceived)
 	port := os.Getenv("PORT")
 	r.Run(":"+port)
 }
 
+// All New Endpoints
+// User Profile Page: GET /users/profile, PUT /users/profile
+// Friends Page: GET /users/friends, GET /users/friends/{friend}
+// Delete Friend: DELETE /users/friends/{friend}
+// Add Friend: POST /users/friendrequest/create/{friend}, PUT /users/friendrequest/accept/{friend}
+// Add Friend: DELETE /users/friendrequest/decline/{friend}, DELETE /users/friendrequest/cancel/{friend}
+// Friend Request Page: GET /users/friendrequest
