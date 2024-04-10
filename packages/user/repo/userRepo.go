@@ -120,6 +120,7 @@ func (u *userRepo) IsFriend(userUid string, friendName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// fix this
 	for _, f := range user.Friends {
 		log.Printf("Current friend in loop: %+v\n", f)
 		if f.Uid == friend.Uid {
