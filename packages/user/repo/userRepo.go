@@ -131,6 +131,11 @@ func (u *userRepo) CreateFriendRequest(userName string, friendName string) error
 	if isfriend {
 		return errors.New("Already friends")
 	}
+	var request database.FriendRequest
+	issent := u.dbConn.Where("sender_id = ? AND receiver_id = ? AND status = ?", user.ID, friend.ID, "Pending").First(&request)
+	if issent.Error == nil {
+		return errors.New("Friend request already sent")
+	}
 	result := u.dbConn.Create(&database.FriendRequest{
 		SenderID:   user.ID,
 		ReceiverID: friend.ID,
@@ -267,9 +272,15 @@ func (u *userRepo) RequestsSent(userName string) ([]database.FriendRequest, erro
 
 func (u *userRepo) RequestsReceived(userName string) ([]database.FriendRequest, error) {
 	var user database.User
-	result := u.dbConn.Where("user_name = ?", userName).Preload("RequestsReceived.Sender").Preload("RequestsReceived.Receiver").Preload("RequestsReceived").First(&user)
+	result := u.dbConn.Where("user_name = ?", userName).Preload("RequestsReceived.Sender").Preload("RequestsReceived", func(db *gorm.DB) *gorm.DB {
+		return db.Where("status = ?", "pending")
+	}).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return user.RequestsReceived, nil
 }
+
+// userRepo works left
+// 1. FriendList query only the username, name, and profile picture
+// 2. RequestsReceived query only the ID CreatedAt the username, name, and profile picture

@@ -73,7 +73,7 @@ func (uc *UserController) CheckUserName(c *gin.Context) {
 
 	exists, err := uc.userService.CheckUserName(request.UserName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check username"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -92,7 +92,7 @@ func (uc *UserController) FindUser(c *gin.Context) {
 
 	user, err := uc.userService.FindUser(request.UserName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -119,7 +119,7 @@ func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 
 	err := uc.userService.UpdateUserInfo(user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -139,7 +139,7 @@ func (uc *UserController) IsFriend(c *gin.Context) {
 
 	isFriend, err := uc.userService.IsFriend(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check friendship"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -159,7 +159,7 @@ func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 
 	err := uc.userService.CreateFriendRequest(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -179,7 +179,7 @@ func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 
 	err := uc.userService.AcceptFriendRequest(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to accept friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -199,7 +199,7 @@ func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 
 	err := uc.userService.DeclineFriendRequest(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decline friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -219,7 +219,7 @@ func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 
 	err := uc.userService.CancelFriendRequest(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -239,7 +239,7 @@ func (uc *UserController) RemoveFriend(c *gin.Context) {
 
 	err := uc.userService.RemoveFriend(request.UserName, request.FriendName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove friend"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -258,7 +258,7 @@ func (uc *UserController) FriendList(c *gin.Context) {
 
 	friendList, err := uc.userService.FriendList(request.UserName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get friend list"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -277,7 +277,7 @@ func (uc *UserController) RequestsSent(c *gin.Context) {
 
 	requestsSent, err := uc.userService.RequestsSent(request.UserName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get sent requests"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -296,7 +296,7 @@ func (uc *UserController) RequestsReceived(c *gin.Context) {
 
 	requestsReceived, err := uc.userService.RequestsReceived(request.UserName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get received requests"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
