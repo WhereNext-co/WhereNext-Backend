@@ -3,21 +3,16 @@ package database
 import (
 	"time"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-type UserAuth struct {
-	gorm.Model
-	Email    string
-	Password string
-	TelNo    string
-}
-
 type User struct {
-	gorm.Model
-	UserName         string `gorm:"unique;not null"`
-	Email            string `gorm:"unique"`
+	Uid              string `gorm:"primaryKey;type:varchar(255)"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
+	UserName         string         `gorm:"unique;not null"`
+	Email            string         `gorm:"unique"`
 	Title            string
 	Name             string
 	Birthdate        time.Time
@@ -26,55 +21,53 @@ type User struct {
 	ProfilePicture   string
 	Bio              string
 	Friends          []User          `gorm:"many2many:UserProfile"`
-	Schedules        []Schedule      `gorm:"many2many:Invitee"`
-	RequestsSent     []FriendRequest `gorm:"foreignKey:SenderID"`
-	RequestsReceived []FriendRequest `gorm:"foreignKey:ReceiverID"`
+	RequestsSent     []FriendRequest `gorm:"foreignKey:SenderUid;references:Uid"`
+	RequestsReceived []FriendRequest `gorm:"foreignKey:ReceiverUid;references:Uid"`
+	RequestSchedules []Invitation    `gorm:"foreignKey:SenderUid;references:Uid"`
+	ReceiveSchedules []Invitation    `gorm:"foreignKey:ReceiverUid;references:Uid"`
 }
 
 type Schedule struct {
 	gorm.Model
-	Name           string
-	StartTime      time.Time
-	EndTime        time.Time
-	StartDate      time.Time
-	EndDate        time.Time
-	Type           string
-	IsAllDay       bool
-	Tag            string
-	Note           string
-	QrCode         string
-	IsNotification bool
-	ColorCode      string
-	Repeat         string
-	Weekly         datatypes.JSON
-	Monthly        datatypes.JSON
-	LocationID     uint
-	ParentID       *uint
-	Children       []Schedule `gorm:"foreignKey:ParentID"`
-	Users          []User     `gorm:"many2many:Invitee"`
+	HostID      string
+	Host        User `gorm:"foreignKey:HostID"`
+	Name        string
+	StartTime   string
+	EndTime     string
+	StartDate   time.Time
+	EndDate     time.Time
+	Type        string
+	QrCode      string
+	LocationID  uint
+	Invitations []Invitation
 }
 
 type Location struct {
 	gorm.Model
-	Latitude   string
-	Longtitude string
-	Name       string
-	Schedules  []Schedule
-}
-
-type Wishlist struct {
-	DateTime   time.Time
-	ScheduleId uint     `gorm:"primaryKey"`
-	Schedule   Schedule `gorm:"foreignKey:ScheduleId"`
-	LocationId uint     `gorm:"primaryKey"`
-	Location   Location `gorm:"foreignKey:LocationId"`
+	Name          string
+	GooglePlaceId string
+	Address       string
+	MapLink       string
+	PhotoLink     string
+	Schedules     []Schedule
 }
 
 type FriendRequest struct {
 	gorm.Model
-	SenderID   uint
-	Sender     User `gorm:"foreignKey:SenderID"`
-	ReceiverID uint
-	Receiver   User `gorm:"foreignKey:ReceiverID"`
-	Status     string
+	SenderUid   string `gorm:"type:varchar(255)"`
+	Sender      User   `gorm:"foreignKey:SenderUid"`
+	ReceiverUid string `gorm:"type:varchar(255)"`
+	Receiver    User   `gorm:"foreignKey:ReceiverUid"`
+	Status      string
+}
+
+type Invitation struct {
+	gorm.Model
+	ScheduleID  uint     `gorm:"type:varchar(255)"`
+	Schedule    Schedule `gorm:"foreignKey:ScheduleID"`
+	SenderUid   string   `gorm:"type:varchar(255)"`
+	User        User     `gorm:"foreignKey:SenderUid"`
+	ReceiverUid string   `gorm:"type:varchar(255)"`
+	Receiver    User     `gorm:"foreignKey:ReceiverUid"`
+	Status      string
 }

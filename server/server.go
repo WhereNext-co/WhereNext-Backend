@@ -11,6 +11,10 @@ import (
 	userController "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/controller"
 	userRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/repo"
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
+
+	scheduleController "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/controller"
+	scheduleRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/repo"
+	scheduleService "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -25,11 +29,12 @@ func InitServer() {
 	 }
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
-	// Initialize Firebase
-	authClient, err := auth.InitializeFirebase()
-	if err != nil {
-		log.Fatalf("error initializing Firebase: %v", err)
-	}
+	scheduleRepo := scheduleRepo.NewScheduleRepo(dbConn)
+	 // Initialize Firebase
+	 authClient, err := auth.InitializeFirebase()
+	 if err != nil {
+		 log.Fatalf("error initializing Firebase: %v", err)
+	 }
 
 	// Initialize Twilio
 	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
@@ -45,7 +50,9 @@ func InitServer() {
 	// Initialize the User services and controllers
 	userService := userService.NewUserService(userRepo)
 	userController := userController.NewUserController(userService)
-
+	// Initialize the Schedule services and controllers
+	scheduleService := scheduleService.NewScheduleService(scheduleRepo)
+	scheduleController := scheduleController.NewScheduleController(scheduleService)
 	r := gin.Default()
 	r.Use(cors.Default())
 
@@ -74,9 +81,15 @@ func InitServer() {
 	r.DELETE("/users/friendrequest/decline", userController.DeclineFriendRequest)
 	r.DELETE("/users/friendrequest/cancel", userController.CancelFriendRequest)
 	r.GET("/users/friendrequest", userController.RequestsReceived)
+
+	// Schedule routes
+	r.POST("/schedules/create-schedule", scheduleController.CreateSchedule)
+	r.DELETE("/schedules/delete-schedule", scheduleController.DeleteSchedule)
+	r.PUT("/schedules/edit-schedule", scheduleController.EditSchedule)
 	port := os.Getenv("PORT")
 	r.Run(":"+port)
 }
+
 
 // All New Endpoints
 // User Profile Page: GET /users/profile, PUT /users/profile
