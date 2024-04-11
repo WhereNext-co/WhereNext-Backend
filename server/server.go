@@ -69,7 +69,7 @@ func InitServer() {
 	// User routes
 	r.POST("/users/create-info", userController.CreateUserInfo)
 	r.POST("/users/check-username", userController.CheckUserName)
-	r.GET("/users/profile", userController.FindUser)
+	r.GET("/users/profile", userController.FindUserByUid)
 	r.PUT("/users/profile", userController.UpdateUserInfo)
 	// Friend routes
 	r.GET("/users/friends", userController.FriendList)

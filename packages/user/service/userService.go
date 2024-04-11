@@ -9,21 +9,22 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUserInfo(userName string, email string, title string, name string, birthdate string,
+	CreateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
 	CheckUserName(userName string) (bool, error)
 	FindUser(userName string) (database.User, error)
-	UpdateUserInfo(userName string, email string, title string, name string, birthdate string,
+	FindUserByUid(Uid string) (database.User, error)
+	UpdateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
-	IsFriend(userName string, friendName string) (bool, error)
-	CreateFriendRequest(userName string, friendName string) error
-	AcceptFriendRequest(userName string, friendName string) error
-	DeclineFriendRequest(userName string, friendName string) error
-	CancelFriendRequest(userName string, friendName string) error
-	RemoveFriend(userName string, friendName string) error
-	FriendList(userName string) ([]database.User, error)
-	RequestsSent(userName string) ([]database.FriendRequest, error)
-	RequestsReceived(userName string) ([]database.FriendRequest, error)
+	IsFriend(Uid string, friendName string) (bool, error)
+	CreateFriendRequest(Uid string, friendName string) error
+	AcceptFriendRequest(Uid string, friendName string) error
+	DeclineFriendRequest(Uid string, friendName string) error
+	CancelFriendRequest(Uid string, friendName string) error
+	RemoveFriend(Uid string, friendName string) error
+	FriendList(Uid string) ([]database.User, error)
+	RequestsSent(Uid string) ([]database.FriendRequest, error)
+	RequestsReceived(Uid string) ([]database.FriendRequest, error)
 }
 
 type userService struct {
@@ -34,7 +35,7 @@ func NewUserService(userRepo userRepo.UserRepoInterface) *userService {
 	return &userService{userRepo}
 }
 
-func (s *userService) CreateUserInfo(userName string, email string,
+func (s *userService) CreateUserInfo(Uid string,userName string, email string,
 	title string, name string, birthdate string, region string,
 	telNo string, profilePicture string, bio string) error {
 	parsedBirthdate, err := time.Parse("2006-01-02", birthdate)
@@ -42,7 +43,7 @@ func (s *userService) CreateUserInfo(userName string, email string,
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
 	}
-	err = s.userRepo.CreateUserInfo(userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
+	err = s.userRepo.CreateUserInfo(Uid,userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
 	if err != nil {
 		return err
 	}
@@ -65,85 +66,93 @@ func (s *userService) FindUser(userName string) (database.User, error) {
 	return user, nil
 }
 
-func (s *userService) UpdateUserInfo(userName string, email string, title string, name string, birthdate string, region string, telNo string, profilePicture string, bio string) error {
+func (s *userService) FindUserByUid(Uid string) (database.User, error) {
+	user, err := s.userRepo.FindUserByUid(Uid)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+func (s *userService) UpdateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string, region string, telNo string, profilePicture string, bio string) error {
 	parsedBirthdate, err := time.Parse("2006-01-02", birthdate)
 	if err != nil {
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
 	}
-	err = s.userRepo.UpdateUserInfo(userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
+	err = s.userRepo.UpdateUserInfo(Uid,userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) IsFriend(userName string, friendName string) (bool, error) {
-	isFriend, err := s.userRepo.IsFriend(userName, friendName)
+func (s *userService) IsFriend(UserUid string, friendName string) (bool, error) {
+	isFriend, err := s.userRepo.IsFriend(UserUid, friendName)
 	if err != nil {
 		return false, err
 	}
 	return isFriend, nil
 }
 
-func (s *userService) CreateFriendRequest(userName string, friendName string) error {
-	err := s.userRepo.CreateFriendRequest(userName, friendName)
+func (s *userService) CreateFriendRequest(userUid string, friendName string) error {
+	err := s.userRepo.CreateFriendRequest(userUid, friendName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) AcceptFriendRequest(userName string, friendName string) error {
-	err := s.userRepo.AcceptFriendRequest(userName, friendName)
+func (s *userService) AcceptFriendRequest(userUid string, friendName string) error {
+	err := s.userRepo.AcceptFriendRequest(userUid, friendName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) DeclineFriendRequest(userName string, friendName string) error {
-	err := s.userRepo.DeclineFriendRequest(userName, friendName)
+func (s *userService) DeclineFriendRequest(userUid string, friendName string) error {
+	err := s.userRepo.DeclineFriendRequest(userUid, friendName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) CancelFriendRequest(userName string, friendName string) error {
-	err := s.userRepo.CancelFriendRequest(userName, friendName)
+func (s *userService) CancelFriendRequest(userUid string, friendName string) error {
+	err := s.userRepo.CancelFriendRequest(userUid, friendName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) RemoveFriend(userName string, friendName string) error {
-	err := s.userRepo.RemoveFriend(userName, friendName)
+func (s *userService) RemoveFriend(userUid string, friendName string) error {
+	err := s.userRepo.RemoveFriend(userUid, friendName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *userService) FriendList(userName string) ([]database.User, error) {
-	friendList, err := s.userRepo.FriendList(userName)
+func (s *userService) FriendList(userUid string) ([]database.User, error) {
+	friendList, err := s.userRepo.FriendList(userUid)
 	if err != nil {
 		return nil, err
 	}
 	return friendList, nil
 }
 
-func (s *userService) RequestsSent(userName string) ([]database.FriendRequest, error) {
-	requestsSent, err := s.userRepo.RequestsSent(userName)
+func (s *userService) RequestsSent(userUid string) ([]database.FriendRequest, error) {
+	requestsSent, err := s.userRepo.RequestsSent(userUid)
 	if err != nil {
 		return nil, err
 	}
 	return requestsSent, nil
 }
 
-func (s *userService) RequestsReceived(userName string) ([]database.FriendRequest, error) {
-	requestsReceived, err := s.userRepo.RequestsReceived(userName)
+func (s *userService) RequestsReceived(userUid string) ([]database.FriendRequest, error) {
+	requestsReceived, err := s.userRepo.RequestsReceived(userUid)
 	if err != nil {
 		return nil, err
 	}

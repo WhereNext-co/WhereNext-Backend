@@ -13,7 +13,6 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=build-env /app/bin/app /app/app
-COPY --from=build-env /app/.env /app/.env
 
 ENV PORT 5000
 ENV GIN_MODE release
