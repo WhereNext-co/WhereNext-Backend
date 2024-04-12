@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/WhereNext-co/WhereNext-Backend.git/database"
+	"github.com/WhereNext-co/WhereNext-Backend.git/middleware"
 	auth "github.com/WhereNext-co/WhereNext-Backend.git/packages/auth"
 	authController "github.com/WhereNext-co/WhereNext-Backend.git/packages/auth/controller"
 	authService "github.com/WhereNext-co/WhereNext-Backend.git/packages/auth/service"
@@ -60,7 +61,7 @@ func InitServer() {
 	r.POST("/auth/updateFirebaseUserPassword", authController.UpdateFirebaseUserPassword)
 
 	// User routes
-	r.POST("/users/create-info", userController.CreateUserInfo)
+	r.POST("/users/create-info", middleware.VerifyToken(), userController.CreateUserInfo)
 	r.POST("/users/check-username", userController.CheckUserName)
 	r.GET("/users/profile", userController.FindUserByUid)
 	r.PUT("/users/profile", userController.UpdateUserInfo)
