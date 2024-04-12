@@ -2,7 +2,6 @@ package userRepo
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/WhereNext-co/WhereNext-Backend.git/database"
@@ -10,12 +9,12 @@ import (
 )
 
 type UserRepoInterface interface {
-	CreateUserInfo(Uid string,userName string, email string, title string, name string,
+	CreateUserInfo(Uid string, userName string, email string, title string, name string,
 		birthdate time.Time, region string, telNo string, profilePicture string, bio string) error
 	CheckUserName(userName string) (bool, error)
 	FindUser(userName string) (database.User, error)
 	FindUserByUid(Uid string) (database.User, error)
-	UpdateUserInfo(Uid string,userName string, email string, title string, name string,
+	UpdateUserInfo(Uid string, userName string, email string, title string, name string,
 		birthdate time.Time, region string, telNo string, profilePicture string, bio string) error
 	IsFriend(Uid string, friendName string) (bool, error)
 	CreateFriendRequest(Uid string, friendName string) error
@@ -36,7 +35,7 @@ func NewUserRepo(dbConn *gorm.DB) *userRepo {
 	return &userRepo{dbConn: dbConn}
 }
 
-func (u *userRepo) CreateUserInfo(Uid string,userName string, email string, title string,
+func (u *userRepo) CreateUserInfo(Uid string, userName string, email string, title string,
 	name string, birthdate time.Time, region string, telNo string, profilePicture string, bio string) error {
 	result := u.dbConn.Create(&database.User{
 		Uid:            Uid,
@@ -86,7 +85,7 @@ func (u *userRepo) FindUserByUid(Uid string) (database.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) UpdateUserInfo(Uid string,userName string, email string, title string,
+func (u *userRepo) UpdateUserInfo(Uid string, userName string, email string, title string,
 	name string, birthdate time.Time, region string, telNo string, profilePicture string, bio string) error {
 	user, err := u.FindUserByUid(Uid)
 	if err != nil {
@@ -120,9 +119,12 @@ func (u *userRepo) IsFriend(userUid string, friendName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// fix this
-	for _, f := range user.Friends {
-		log.Printf("Current friend in loop: %+v\n", f)
+	var userFriend []database.User
+	err = u.dbConn.Model(&user).Association("Friends").Find(&userFriend)
+	if err != nil {
+		return false, err
+	}
+	for _, f := range userFriend {
 		if f.Uid == friend.Uid {
 			return true, nil
 		}
@@ -136,28 +138,28 @@ func (u *userRepo) CreateFriendRequest(userUid string, friendName string) error 
 		return err
 	}
 	if user.UserName == friendName {
-		return errors.New("Cannot send friend request to yourself")
+		return errors.New("cannot send friend request to yourself")
 	}
 	friend, err := u.FindUser(friendName)
 	if err != nil {
 		return err
 	}
-	isfriend, err := u.IsFriend(userUid, friendName)
+	isFriend, err := u.IsFriend(userUid, friendName)
 	if err != nil {
 		return err
 	}
-	if isfriend {
-		return errors.New("Already friends")
+	if isFriend {
+		return errors.New("already friends")
 	}
 	var request database.FriendRequest
-	issent := u.dbConn.Where("sender_id = ? AND receiver_id = ? AND status = ?", user.Uid, friend.Uid, "Pending").First(&request)
-	if issent.Error == nil {
-		return errors.New("Friend request already sent")
+	isSent := u.dbConn.Where("sender_id = ? AND receiver_id = ? AND status = ?", user.Uid, friend.Uid, "Pending").First(&request)
+	if isSent.Error == nil {
+		return errors.New("friend request already sent")
 	}
 	result := u.dbConn.Create(&database.FriendRequest{
 		SenderUid:   user.Uid,
 		ReceiverUid: friend.Uid,
-		Status:     "Pending",
+		Status:      "Pending",
 	})
 	if result.Error != nil {
 		return result.Error
@@ -171,18 +173,18 @@ func (u *userRepo) AcceptFriendRequest(userUid string, friendName string) error 
 		return err
 	}
 	if user.UserName == friendName {
-		return errors.New("Cannot send friend request to yourself")
+		return errors.New("cannot send friend request to yourself")
 	}
 	friend, err := u.FindUser(friendName)
 	if err != nil {
 		return err
 	}
-	isfriend, err := u.IsFriend(userUid, friendName)
+	isFriend, err := u.IsFriend(userUid, friendName)
 	if err != nil {
 		return err
 	}
-	if isfriend {
-		return errors.New("Already friends")
+	if isFriend {
+		return errors.New("already friends")
 	}
 	var request database.FriendRequest
 	result := u.dbConn.Where("sender_uid = ? AND receiver_uid = ? AND status = ?", friend.Uid, user.Uid, "Pending").First(&request)
@@ -208,18 +210,18 @@ func (u *userRepo) DeclineFriendRequest(userUid string, friendName string) error
 		return err
 	}
 	if user.UserName == friendName {
-		return errors.New("Cannot send friend request to yourself")
+		return errors.New("cannot send friend request to yourself")
 	}
 	friend, err := u.FindUser(friendName)
 	if err != nil {
 		return err
 	}
-	isfriend, err := u.IsFriend(userUid, friendName)
+	isFriend, err := u.IsFriend(userUid, friendName)
 	if err != nil {
 		return err
 	}
-	if isfriend {
-		return errors.New("Already friends")
+	if isFriend {
+		return errors.New("already friends")
 	}
 	var request database.FriendRequest
 	result := u.dbConn.Where("sender_uid = ? AND receiver_uid = ? AND status = ?", friend.Uid, user.Uid, "Pending").First(&request)
@@ -239,18 +241,18 @@ func (u *userRepo) CancelFriendRequest(userUid string, friendName string) error 
 		return err
 	}
 	if user.UserName == friendName {
-		return errors.New("Cannot send friend request to yourself")
+		return errors.New("cannot send friend request to yourself")
 	}
 	friend, err := u.FindUser(friendName)
 	if err != nil {
 		return err
 	}
-	isfriend, err := u.IsFriend(userUid, friendName)
+	isFriend, err := u.IsFriend(userUid, friendName)
 	if err != nil {
 		return err
 	}
-	if isfriend {
-		return errors.New("Already friends")
+	if isFriend {
+		return errors.New("already friends")
 	}
 	var request database.FriendRequest
 	result := u.dbConn.Where("sender_uid = ? AND receiver_uid = ? AND status = ?", user.Uid, friend.Uid, "Pending").First(&request)
@@ -265,8 +267,8 @@ func (u *userRepo) CancelFriendRequest(userUid string, friendName string) error 
 }
 
 type Friendship struct {
-    UserID string
-    FriendID string
+	UserID   string
+	FriendID string
 }
 
 func (u *userRepo) RemoveFriend(userUid string, friendName string) error {
@@ -278,14 +280,14 @@ func (u *userRepo) RemoveFriend(userUid string, friendName string) error {
 	if err != nil {
 		return err
 	}
-    result := u.dbConn.Exec("DELETE FROM user_profiles WHERE user_uid = ? AND friend_uid = ?", user.Uid, friend.Uid)
+	result := u.dbConn.Exec("DELETE FROM user_profiles WHERE user_uid = ? AND friend_uid = ?", user.Uid, friend.Uid)
 	if result.Error != nil {
 		return result.Error
 	}
 	result = u.dbConn.Exec("DELETE FROM user_profiles WHERE user_uid = ? AND friend_uid = ?", friend.Uid, user.Uid)
-    if result.Error != nil {
-        return result.Error
-    }
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
 
