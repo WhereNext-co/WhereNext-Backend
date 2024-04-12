@@ -12,11 +12,11 @@ import (
 var Db *gorm.DB
 
 func InitDB() *gorm.DB {
-		 // Load .env file
-		 err := godotenv.Load()
-		 if err != nil {
-			 log.Fatal("Fail to .env file")
-		 }
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Fail to .env file")
+	}
 	// Get database credentials from environment variables
 	username := os.Getenv("MYSQL_USERNAME")
 	password := os.Getenv("MYSQL_PASSWORD")
@@ -34,7 +34,7 @@ func InitDB() *gorm.DB {
 	}
 
 	// Migrate the schema
-	err = Db.AutoMigrate(&User{}, &Location{}, &Schedule{}, &FriendRequest{})
+	err = Db.AutoMigrate(&User{}, &Location{}, &Schedule{}, &FriendRequest{}, &Invitation{})
 	if err != nil {
 		panic("failed to migrate schema: " + err.Error())
 	}

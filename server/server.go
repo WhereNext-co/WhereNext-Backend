@@ -22,19 +22,19 @@ import (
 )
 
 func InitServer() {
-	 // Load .env file
-	 err := godotenv.Load()
-	 if err != nil {
-		 log.Fatal("Fail to .env file")
-	 }
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Fail to .env file")
+	}
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
 	scheduleRepo := scheduleRepo.NewScheduleRepo(dbConn)
-	 // Initialize Firebase
-	 authClient, err := auth.InitializeFirebase()
-	 if err != nil {
-		 log.Fatalf("error initializing Firebase: %v", err)
-	 }
+	// Initialize Firebase
+	authClient, err := auth.InitializeFirebase()
+	if err != nil {
+		log.Fatalf("error initializing Firebase: %v", err)
+	}
 
 	// Initialize Twilio
 	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
@@ -86,10 +86,14 @@ func InitServer() {
 	r.POST("/schedules/create-schedule", scheduleController.CreateSchedule)
 	r.DELETE("/schedules/delete-schedule", scheduleController.DeleteSchedule)
 	r.PUT("/schedules/edit-schedule", scheduleController.EditSchedule)
+	r.GET("/schedules/get-allschedule", scheduleController.GetSchedule)
+	r.GET("/schedules/get-Diary", scheduleController.GetDiary)
+	// Invitation routes
+	r.PATCH("/schedules/accept-invitation", scheduleController.AcceptInvitation)
+	r.PATCH("/schedules/reject-invitation", scheduleController.RejectInvitation)
 	port := os.Getenv("PORT")
-	r.Run(":"+port)
+	r.Run(":" + port)
 }
-
 
 // All New Endpoints
 // User Profile Page: GET /users/profile, PUT /users/profile
