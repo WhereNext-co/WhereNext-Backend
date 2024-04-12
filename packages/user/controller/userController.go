@@ -53,7 +53,7 @@ func (uc *UserController) CreateUserInfo(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.CreateUserInfo(user.Uid,user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
+	err := uc.userService.CreateUserInfo(user.Uid, user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -121,7 +121,7 @@ func (uc *UserController) FindUserByUid(c *gin.Context) {
 
 func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 	var user struct {
-		Uid			string `json:"uid"`
+		Uid            string `json:"uid"`
 		UserName       string `json:"userName"`
 		Email          string `json:"email"`
 		Title          string `json:"title"`
@@ -138,7 +138,7 @@ func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.UpdateUserInfo(user.Uid,user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
+	err := uc.userService.UpdateUserInfo(user.Uid, user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -149,7 +149,7 @@ func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 
 func (uc *UserController) IsFriend(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -169,7 +169,7 @@ func (uc *UserController) IsFriend(c *gin.Context) {
 
 func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -189,7 +189,7 @@ func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 
 func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -209,7 +209,7 @@ func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 
 func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -229,7 +229,7 @@ func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 
 func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -249,7 +249,7 @@ func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 
 func (uc *UserController) RemoveFriend(c *gin.Context) {
 	var request struct {
-		Uid   string `json:"uid"`
+		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 

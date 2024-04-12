@@ -9,12 +9,12 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string,
+	CreateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
 	CheckUserName(userName string) (bool, error)
 	FindUser(userName string) (database.User, error)
 	FindUserByUid(Uid string) (database.User, error)
-	UpdateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string,
+	UpdateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
 	IsFriend(Uid string, friendName string) (bool, error)
 	CreateFriendRequest(Uid string, friendName string) error
@@ -35,7 +35,7 @@ func NewUserService(userRepo userRepo.UserRepoInterface) *userService {
 	return &userService{userRepo}
 }
 
-func (s *userService) CreateUserInfo(Uid string,userName string, email string,
+func (s *userService) CreateUserInfo(Uid string, userName string, email string,
 	title string, name string, birthdate string, region string,
 	telNo string, profilePicture string, bio string) error {
 	parsedBirthdate, err := time.Parse("2006-01-02", birthdate)
@@ -43,7 +43,7 @@ func (s *userService) CreateUserInfo(Uid string,userName string, email string,
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
 	}
-	err = s.userRepo.CreateUserInfo(Uid,userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
+	err = s.userRepo.CreateUserInfo(Uid, userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
 	if err != nil {
 		return err
 	}
@@ -74,13 +74,13 @@ func (s *userService) FindUserByUid(Uid string) (database.User, error) {
 	return user, nil
 }
 
-func (s *userService) UpdateUserInfo(Uid string,userName string, email string, title string, name string, birthdate string, region string, telNo string, profilePicture string, bio string) error {
+func (s *userService) UpdateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string, region string, telNo string, profilePicture string, bio string) error {
 	parsedBirthdate, err := time.Parse("2006-01-02", birthdate)
 	if err != nil {
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
 	}
-	err = s.userRepo.UpdateUserInfo(Uid,userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
+	err = s.userRepo.UpdateUserInfo(Uid, userName, email, title, name, parsedBirthdate, region, telNo, profilePicture, bio)
 	if err != nil {
 		return err
 	}
