@@ -31,14 +31,17 @@ type Schedule struct {
 	gorm.Model
 	HostID      string
 	Host        User `gorm:"foreignKey:HostID"`
+	Catagory    string
 	Name        string
 	StartTime   string
 	EndTime     string
 	StartDate   time.Time
 	EndDate     time.Time
+	Status      string
 	Type        string
 	QrCode      string
 	LocationID  uint
+	Location    Location `gorm:"foreignKey:LocationID"`
 	Invitations []Invitation
 }
 

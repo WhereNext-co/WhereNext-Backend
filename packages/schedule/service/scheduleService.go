@@ -1,6 +1,7 @@
 package scheduleService
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -11,17 +12,31 @@ import (
 type ScheduleServiceInterface interface {
 	CreateLocation(PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
 		PlaceMapLink string, PlacePhotoLink string) error
-	CreateSchedule(Name string, Type string,
-		Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string, Status string, Location string) (uint, error)
-	EditSchedule(ScheduleID uint, Name string, Type string,
-		Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string, Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+	CreatePersonalSchedule(HostUid string, Name string, Type string,
+		Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string,
+		Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
 		PlaceMapLink string, PlacePhotoLink string) error
-	GetSchedule(HostID string) ([]database.Schedule, error)
-	GetDiary(HostID string) ([]database.Schedule, error)
+	EditPersonalSchedule(ScheduleID uint, HostUid string, Name string, Type string,
+		Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string,
+		Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+		PlaceMapLink string, PlacePhotoLink string) error
+	CreateRendezvous(HostUid string, Name string, Type string,
+		Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string,
+		Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+		PlaceMapLink string, PlacePhotoLink string) (uint, error)
+	AddInviteeRendezvous(ScheduleID uint, HostID string, InviteeID string) error
+	RemoveInviteeRendezvous(ScheduleID uint, HostID string, InviteeID string) error
+	GetActiveSchedule(userID string) ([]database.Schedule, error)
+	GetActiveScheduleByDate(userID string, Date string) ([]database.Schedule, error)
+	GetDraftRendezvous(userID string) ([]database.Schedule, error)
+	GetPastRendezvous(userID string) ([]database.Schedule, error)
+	GetPendingRendezvous(userID string) ([]database.Schedule, error)
+	GetActiveRendezvous(userID string) ([]database.Schedule, error)
 	CreateInvitation(ScheduleID uint, HostID string, InvitedUsers []string) error
 	AcceptInvitation(InvitationID uint) error
 	RejectInvitation(InvitationID uint) error
 	DeleteSchedule(ScheduleID int) error
+	ChangeStatusFromDraftToActive(scheduleID uint) error
 }
 
 type scheduleService struct {
@@ -33,16 +48,50 @@ func NewScheduleService(scheduleRepo scheduleRepo.ScheduleRepoInterface) *schedu
 }
 
 func (s *scheduleService) CreateLocation(PlaceName string, PlaceGooglePlaceId string, PlaceLocation string, PlaceMapLink string, PlacePhotoLink string) error {
-	err := s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
+	IsExist, err := s.scheduleRepo.FindLocationExist(PlaceGooglePlaceId)
+	if IsExist && err == nil {
+		return errors.New("Already Exist")
+	}
+	err = s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *scheduleService) CreateSchedule(Name string, Type string,
+func (s *scheduleService) CreatePersonalSchedule(HostUid string, Name string, Type string,
 	Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string,
-	Status string, LocationID string) (uint, error) {
+	Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+	PlaceMapLink string, PlacePhotoLink string) error {
+	parsedStartdate, err := time.Parse("2006-01-02", Startdate)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return err
+	}
+	parsedEnddate, err := time.Parse("2006-01-02", Enddate)
+	if err != nil {
+		log.Printf("Error parsing enddate: %v", err)
+		return err
+	}
+	IsExist, err := s.scheduleRepo.FindLocationExist(PlaceGooglePlaceId)
+	if IsExist == false {
+		err := s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
+		if err != nil {
+			return err
+		}
+	}
+	location, err := s.scheduleRepo.FindLocation(PlaceGooglePlaceId)
+	err = s.scheduleRepo.CreatePersonalSchedule(HostUid, Name, Type, Starttime, Endtime, parsedStartdate, parsedEnddate, Qrcode, Status, location.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *scheduleService) CreateRendezvous(HostUid string, Name string, Type string,
+	Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string,
+	Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+	PlaceMapLink string, PlacePhotoLink string) (uint, error) {
 	parsedStartdate, err := time.Parse("2006-01-02", Startdate)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
@@ -53,15 +102,22 @@ func (s *scheduleService) CreateSchedule(Name string, Type string,
 		log.Printf("Error parsing enddate: %v", err)
 		return 0, err
 	}
-	scheduleID, err2 := s.scheduleRepo.CreateSchedule(Name, Type, Starttime, Endtime, parsedStartdate, parsedEnddate, Qrcode, Status, LocationID)
-	if err2 != nil {
-		log.Printf("Error parsing starttime: %v", err2)
-		return 0, err2
+	IsExist, err := s.scheduleRepo.FindLocationExist(PlaceGooglePlaceId)
+	if IsExist == false {
+		err := s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
+		if err != nil {
+			return 0, err
+		}
+	}
+	location, err := s.scheduleRepo.FindLocation(PlaceGooglePlaceId)
+	scheduleID, err := s.scheduleRepo.CreateRendezvous(HostUid, Name, Type, Starttime, Endtime, parsedStartdate, parsedEnddate, Qrcode, Status, location.ID)
+	if err != nil {
+		return 0, err
 	}
 	return scheduleID, nil
 }
 
-func (s *scheduleService) EditSchedule(ScheduleID uint, Name string, Type string,
+func (s *scheduleService) EditPersonalSchedule(ScheduleID uint, HostUid string, Name string, Type string,
 	Starttime string, Endtime string, Startdate string, Enddate string, Qrcode string, Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
 	PlaceMapLink string, PlacePhotoLink string) error {
 	parsedStartdate, err := time.Parse("2006-01-02", Startdate)
@@ -74,9 +130,34 @@ func (s *scheduleService) EditSchedule(ScheduleID uint, Name string, Type string
 		log.Printf("Error parsing enddate: %v", err)
 		return err
 	}
-	err2 := s.scheduleRepo.EditSchedule(ScheduleID, Name, Type, Starttime, Endtime, parsedStartdate, parsedEnddate, Qrcode, Status, PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
-	if err2 != nil {
-		return err2
+	IsExist, err := s.scheduleRepo.FindLocationExist(PlaceGooglePlaceId)
+	if IsExist == false {
+		err := s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	location, err := s.scheduleRepo.FindLocation(PlaceGooglePlaceId)
+	err = s.scheduleRepo.EditPersonalSchedule(ScheduleID, HostUid, Name, Type, Starttime, Endtime, parsedStartdate, parsedEnddate, Qrcode, Status, location.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *scheduleService) AddInviteeRendezvous(ScheduleID uint, HostID string, InvitedID string) error {
+	err := s.scheduleRepo.CreateInvitation(ScheduleID, HostID, InvitedID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *scheduleService) RemoveInviteeRendezvous(ScheduleID uint, HostID string, InvitedID string) error {
+	err := s.scheduleRepo.RemoveInviteeRendezvous(ScheduleID, HostID, InvitedID)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -107,6 +188,14 @@ func (s *scheduleService) RejectInvitation(InvitationID uint) error {
 	return nil
 }
 
+func (s *scheduleService) ChangeStatusFromDraftToActive(ScheduleID uint) error {
+	err := s.scheduleRepo.ChangeStatusFromDraftToActive(ScheduleID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *scheduleService) DeleteSchedule(ScheduleID int) error {
 	err := s.scheduleRepo.DeleteSchedule(ScheduleID)
 	if err != nil {
@@ -116,8 +205,8 @@ func (s *scheduleService) DeleteSchedule(ScheduleID int) error {
 	return nil
 }
 
-func (s *scheduleService) GetSchedule(HostID string) ([]database.Schedule, error) {
-	ScheduleList, err := s.scheduleRepo.GetSchedule(HostID)
+func (s *scheduleService) GetActiveSchedule(HostID string) ([]database.Schedule, error) {
+	ScheduleList, err := s.scheduleRepo.GetActiveSchedule(HostID)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return ScheduleList, err
@@ -125,11 +214,53 @@ func (s *scheduleService) GetSchedule(HostID string) ([]database.Schedule, error
 	return ScheduleList, nil
 }
 
-func (s *scheduleService) GetDiary(HostID string) ([]database.Schedule, error) {
-	DiaryList, err := s.scheduleRepo.GetSchedule(HostID)
+func (s *scheduleService) GetActiveScheduleByDate(HostID string, Date string) ([]database.Schedule, error) {
+	var schedule []database.Schedule
+	parseddate, err := time.Parse("2006-01-02", Date)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
-		return DiaryList, err
+		return schedule, err
 	}
-	return DiaryList, nil
+	ScheduleList, err := s.scheduleRepo.GetActiveScheduleByDate(HostID, parseddate)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return ScheduleList, err
+	}
+	return ScheduleList, nil
+}
+
+func (s *scheduleService) GetDraftRendezvous(HostID string) ([]database.Schedule, error) {
+	ScheduleList, err := s.scheduleRepo.GetDraftRendezvous(HostID)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return ScheduleList, err
+	}
+	return ScheduleList, nil
+}
+
+func (s *scheduleService) GetPastRendezvous(HostID string) ([]database.Schedule, error) {
+	ScheduleList, err := s.scheduleRepo.GetPastRendezvous(HostID)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return ScheduleList, err
+	}
+	return ScheduleList, nil
+}
+
+func (s *scheduleService) GetPendingRendezvous(HostID string) ([]database.Schedule, error) {
+	ScheduleList, err := s.scheduleRepo.GetPendingRendezvous(HostID)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return ScheduleList, err
+	}
+	return ScheduleList, nil
+}
+
+func (s *scheduleService) GetActiveRendezvous(HostID string) ([]database.Schedule, error) {
+	ScheduleList, err := s.scheduleRepo.GetActiveRendezvous(HostID)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return ScheduleList, err
+	}
+	return ScheduleList, nil
 }

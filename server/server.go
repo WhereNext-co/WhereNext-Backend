@@ -83,14 +83,24 @@ func InitServer() {
 	r.GET("/users/friendrequest", userController.RequestsReceived)
 
 	// Schedule routes
-	r.POST("/schedules/create-schedule", scheduleController.CreateSchedule)
+	r.POST("/schedules/create-personalschedule", scheduleController.CreatePersonalSchedule)
 	r.DELETE("/schedules/delete-schedule", scheduleController.DeleteSchedule)
-	r.PUT("/schedules/edit-schedule", scheduleController.EditSchedule)
-	r.GET("/schedules/get-allschedule", scheduleController.GetSchedule)
-	r.GET("/schedules/get-Diary", scheduleController.GetDiary)
+	r.PUT("/schedules/edit-schedule", scheduleController.EditPersonalSchedule)
+	r.PATCH("/schedules/change-status-to-active", scheduleController.ChangeStatusFromDraftToActive)
+	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
+	r.GET("/schedules/get-schedulebydate", scheduleController.GetActiveScheduleByDate)
+	// Rendezvous routes
+	r.POST("/rendezvous/create-rendevous", scheduleController.CreateRendezvous)
+	r.GET("/rendezvous/get-draft-rendezvous", scheduleController.GetDraftRendezvous)
+	r.GET("/rendezvous/get-past-rendezvous", scheduleController.GetPastRendezvous)
+	r.GET("/rendezvous/get-active-rendezvous", scheduleController.GetActiveRendezvous)
+	r.GET("/rendezvous/get-pending-rendezvous", scheduleController.GetPendingRendezvous)
+	r.PUT("/rendezvous/edit-rendevous", scheduleController.EditRendezvous)
+	r.POST("/rendezvous/add-user-rendezvous", scheduleController.AddInviteeRendezvous)
+	r.DELETE("/rendezvous/remove-user-rendezvous", scheduleController.RemoveInviteeRendezvous)
 	// Invitation routes
-	r.PATCH("/schedules/accept-invitation", scheduleController.AcceptInvitation)
-	r.PATCH("/schedules/reject-invitation", scheduleController.RejectInvitation)
+	r.PATCH("/rendezvous/accept-invitation", scheduleController.AcceptInvitation)
+	r.PATCH("/rendezvous/reject-invitation", scheduleController.RejectInvitation)
 	port := os.Getenv("PORT")
 	r.Run(":" + port)
 }
