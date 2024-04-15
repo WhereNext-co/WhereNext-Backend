@@ -18,11 +18,11 @@ import (
 )
 
 func InitServer() {
-	 // Load .env file
-	 err := godotenv.Load()
-	 if err != nil {
-		 log.Fatal("Fail to .env file")
-	 }
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Fail to .env file")
+	}
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
 	// Initialize Firebase
@@ -68,6 +68,7 @@ func InitServer() {
 	r.GET("/users/friends", userController.FriendList)
 	r.GET("/users/friends/isfriend", userController.IsFriend)
 	r.DELETE("/users/friends", userController.RemoveFriend)
+	r.GET("/users/friends/friendinfo", userController.FindFriendInfo)
 	// Friend request routes
 	r.POST("/users/friendrequest", userController.CreateFriendRequest)
 	r.PUT("/users/friendrequest", userController.AcceptFriendRequest)
@@ -75,7 +76,7 @@ func InitServer() {
 	r.DELETE("/users/friendrequest/cancel", userController.CancelFriendRequest)
 	r.GET("/users/friendrequest", userController.RequestsReceived)
 	port := os.Getenv("PORT")
-	r.Run(":"+port)
+	r.Run(":" + port)
 }
 
 // All New Endpoints

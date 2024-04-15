@@ -17,6 +17,7 @@ type UserServiceInterface interface {
 	UpdateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
 	IsFriend(Uid string, friendName string) (bool, error)
+	FriendStatus(Uid string, friendName string) (string, error)
 	CreateFriendRequest(Uid string, friendName string) error
 	AcceptFriendRequest(Uid string, friendName string) error
 	DeclineFriendRequest(Uid string, friendName string) error
@@ -93,6 +94,14 @@ func (s *userService) IsFriend(UserUid string, friendName string) (bool, error) 
 		return false, err
 	}
 	return isFriend, nil
+}
+
+func (s *userService) FriendStatus(UserUid string, friendName string) (string, error) {
+	friendStatus, err := s.userRepo.FriendStatus(UserUid, friendName)
+	if err != nil {
+		return friendStatus, err
+	}
+	return friendStatus, nil
 }
 
 func (s *userService) CreateFriendRequest(userUid string, friendName string) error {

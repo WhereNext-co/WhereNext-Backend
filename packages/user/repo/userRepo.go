@@ -17,6 +17,7 @@ type UserRepoInterface interface {
 	UpdateUserInfo(Uid string, userName string, email string, title string, name string,
 		birthdate time.Time, region string, telNo string, profilePicture string, bio string) error
 	IsFriend(Uid string, friendName string) (bool, error)
+	FriendStatus(Uid string, friendName string) (string, error)
 	CreateFriendRequest(Uid string, friendName string) error
 	AcceptFriendRequest(Uid string, friendName string) error
 	DeclineFriendRequest(Uid string, friendName string) error
@@ -130,6 +131,37 @@ func (u *userRepo) IsFriend(userUid string, friendName string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (u *userRepo) FriendStatus(userUid string, friendName string) (string, error) {
+	user, err := u.FindUserByUid(userUid)
+	if err != nil {
+		return "cannot find user", err
+	}
+	if user.UserName == friendName {
+		return "cannot be friend with yourself", errors.New("cannot be friend with yourself")
+	}
+	friend, err := u.FindUser(friendName)
+	if err != nil {
+		return "cannot find friend", err
+	}
+	isFriend, err := u.IsFriend(userUid, friendName)
+	if err != nil {
+		return "error checking friend status", err
+	}
+	if isFriend {
+		return "already friends", nil
+	}
+	var request database.FriendRequest
+	result := u.dbConn.Where("sender_uid = ? AND receiver_uid = ? AND status = ?", user.Uid, friend.Uid, "Pending").First(&request)
+	if result.Error == nil {
+		return "friend request already sent", nil
+	}
+	result = u.dbConn.Where("sender_uid = ? AND receiver_uid = ? AND status = ?", friend.Uid, user.Uid, "Pending").First(&request)
+	if result.Error == nil {
+		return "friend request received", nil
+	}
+	return "not friends", nil
 }
 
 func (u *userRepo) CreateFriendRequest(userUid string, friendName string) error {
