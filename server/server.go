@@ -91,12 +91,12 @@ func InitServer() {
 	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
 	r.GET("/schedules/get-schedulebydate", scheduleController.GetActiveScheduleByDate)
 	// Rendezvous routes
-	r.POST("/rendezvous/create-rendevous", scheduleController.CreateRendezvous)
+	r.POST("/rendezvous/create-rendezvous", scheduleController.CreateRendezvous)
 	r.GET("/rendezvous/get-draft-rendezvous", scheduleController.GetDraftRendezvous)
 	r.GET("/rendezvous/get-past-rendezvous", scheduleController.GetPastRendezvous)
 	r.GET("/rendezvous/get-active-rendezvous", scheduleController.GetActiveRendezvous)
 	r.GET("/rendezvous/get-pending-rendezvous", scheduleController.GetPendingRendezvous)
-	r.PUT("/rendezvous/edit-rendevous", scheduleController.EditRendezvous)
+	r.PUT("/rendezvous/edit-rendezvous", scheduleController.EditRendezvous)
 	r.POST("/rendezvous/add-user-rendezvous", scheduleController.AddInviteeRendezvous)
 	r.DELETE("/rendezvous/remove-user-rendezvous", scheduleController.RemoveInviteeRendezvous)
 	// Invitation routes
