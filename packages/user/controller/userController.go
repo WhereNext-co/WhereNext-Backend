@@ -37,7 +37,6 @@ func NewUserController(userService userService.UserServiceInterface) *UserContro
 // CreateUserInfo at database
 func (uc *UserController) CreateUserInfo(c *gin.Context) {
 	var user struct {
-		Uid            string `json:"uid"`
 		UserName       string `json:"userName"`
 		Email          string `json:"email"`
 		Title          string `json:"title"`
@@ -54,7 +53,13 @@ func (uc *UserController) CreateUserInfo(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.CreateUserInfo(user.Uid, user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.CreateUserInfo(uid.(string), user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
