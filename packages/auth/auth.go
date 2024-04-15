@@ -21,8 +21,8 @@ var (
 
 func InitializeFirebase() (*Client, error) {
     ctx := context.Background()
-    opt := option.WithCredentialsFile("packages/auth/wherenext-24624-firebase-adminsdk-accountkey.json")
-    //opt := option.WithCredentialsFile("/run/secrets/firebase_credentials")
+    //opt := option.WithCredentialsFile("packages/auth/wherenext-24624-firebase-adminsdk-accountkey.json")
+    opt := option.WithCredentialsFile("/run/secrets/firebase_credentials")
     app, err := firebase.NewApp(context.Background(), nil, opt)
     if err != nil {
         return nil, fmt.Errorf("error initializing app: %v", err)
