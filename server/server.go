@@ -12,6 +12,10 @@ import (
 	userController "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/controller"
 	userRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/repo"
 	userService "github.com/WhereNext-co/WhereNext-Backend.git/packages/user/service"
+
+	scheduleController "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/controller"
+	scheduleRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/repo"
+	scheduleService "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,6 +30,7 @@ func InitServer() {
 	}
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
+	scheduleRepo := scheduleRepo.NewScheduleRepo(dbConn)
 	// Initialize Firebase
 	authClient, err := auth.InitializeFirebase()
 	if err != nil {
@@ -46,7 +51,9 @@ func InitServer() {
 	// Initialize the User services and controllers
 	userService := userService.NewUserService(userRepo)
 	userController := userController.NewUserController(userService)
-
+	// Initialize the Schedule services and controllers
+	scheduleService := scheduleService.NewScheduleService(scheduleRepo)
+	scheduleController := scheduleController.NewScheduleController(scheduleService)
 	r := gin.Default()
 	r.Use(cors.Default())
 
@@ -76,6 +83,26 @@ func InitServer() {
 	r.DELETE("/users/friendrequest/decline", userController.DeclineFriendRequest)
 	r.DELETE("/users/friendrequest/cancel", userController.CancelFriendRequest)
 	r.GET("/users/friendrequest", userController.RequestsReceived)
+
+	// Schedule routes
+	r.POST("/schedules/create-personalschedule", scheduleController.CreatePersonalSchedule)
+	r.DELETE("/schedules/delete-schedule", scheduleController.DeleteSchedule)
+	r.PUT("/schedules/edit-schedule", scheduleController.EditPersonalSchedule)
+	r.PATCH("/schedules/change-status-to-active", scheduleController.ChangeStatusFromDraftToActive)
+	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
+	r.GET("/schedules/get-schedulebydate", scheduleController.GetActiveScheduleByDate)
+	// Rendezvous routes
+	r.POST("/rendezvous/create-rendevous", scheduleController.CreateRendezvous)
+	r.GET("/rendezvous/get-draft-rendezvous", scheduleController.GetDraftRendezvous)
+	r.GET("/rendezvous/get-past-rendezvous", scheduleController.GetPastRendezvous)
+	r.GET("/rendezvous/get-active-rendezvous", scheduleController.GetActiveRendezvous)
+	r.GET("/rendezvous/get-pending-rendezvous", scheduleController.GetPendingRendezvous)
+	r.PUT("/rendezvous/edit-rendevous", scheduleController.EditRendezvous)
+	r.POST("/rendezvous/add-user-rendezvous", scheduleController.AddInviteeRendezvous)
+	r.DELETE("/rendezvous/remove-user-rendezvous", scheduleController.RemoveInviteeRendezvous)
+	// Invitation routes
+	r.PATCH("/rendezvous/accept-invitation", scheduleController.AcceptInvitation)
+	r.PATCH("/rendezvous/reject-invitation", scheduleController.RejectInvitation)
 	port := os.Getenv("PORT")
 	r.Run(":" + port)
 }
