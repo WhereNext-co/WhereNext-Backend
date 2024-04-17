@@ -76,6 +76,7 @@ func InitServer() {
 	r.GET("/users/friends", userController.FriendList)
 	r.GET("/users/friends/isfriend", userController.IsFriend)
 	r.DELETE("/users/friends", userController.RemoveFriend)
+	r.GET("/users/friends/friendinfo", userController.FindFriendInfo)
 	// Friend request routes
 	r.POST("/users/friendrequest", userController.CreateFriendRequest)
 	r.PUT("/users/friendrequest", userController.AcceptFriendRequest)
