@@ -11,7 +11,7 @@ type ScheduleControllerInterface interface {
 	CreatePersonalSchedule(c *gin.Context)
 	CreateRendezvous(c *gin.Context)
 	EditPersonalSchedule(c *gin.Context)
-	ChangeStatusFromDraftToActive(c *gin.Context)
+	ChangeStatus(c *gin.Context)
 	EditRendezvous(c *gin.Context)
 	AddInviteeRendezvous(c *gin.Context)
 	RemoveInviteeRendezvous(c *gin.Context)
@@ -45,9 +45,6 @@ func (sc *ScheduleController) CreatePersonalSchedule(c *gin.Context) {
 		Type               string `json:"type"`
 		Starttime          string `json:"starttime"`
 		Endtime            string `json:"endtime"`
-		Startdate          string `json:"startdate"`
-		Enddate            string `json:"enddate"`
-		Qrcode             string `json:"qrcode"`
 		Status             string `json:"status"`
 		PlaceName          string `json:"placename"`
 		PlaceGooglePlaceId string `json:"placegoogleplaceid"`
@@ -59,7 +56,7 @@ func (sc *ScheduleController) CreatePersonalSchedule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.CreatePersonalSchedule(schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Startdate, schedule.Enddate, schedule.Qrcode, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
+	err := sc.scheduleService.CreatePersonalSchedule(schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create schedule"})
 		return
@@ -74,9 +71,6 @@ func (sc *ScheduleController) CreateRendezvous(c *gin.Context) {
 		Type               string   `json:"type"`
 		Starttime          string   `json:"starttime"`
 		Endtime            string   `json:"endtime"`
-		Startdate          string   `json:"startdate"`
-		Enddate            string   `json:"enddate"`
-		Qrcode             string   `json:"qrcode"`
 		Status             string   `json:"status"`
 		InvitedUsers       []string `json:"InvitedUsers"`
 		PlaceName          string   `json:"placename"`
@@ -90,7 +84,7 @@ func (sc *ScheduleController) CreateRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	scheduleID, err := sc.scheduleService.CreateRendezvous(schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Startdate, schedule.Enddate, schedule.Qrcode, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
+	scheduleID, err := sc.scheduleService.CreateRendezvous(schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
 
 	err = sc.scheduleService.CreateInvitation(scheduleID, schedule.HostUid, schedule.InvitedUsers)
 	if err != nil {
@@ -102,14 +96,15 @@ func (sc *ScheduleController) CreateRendezvous(c *gin.Context) {
 
 func (sc *ScheduleController) AcceptInvitation(c *gin.Context) {
 	var request struct {
-		InvitationID uint `json:"invitationid"`
+		ScheduleID uint   `json:"scheduleid"`
+		ReceiverID string `json:"receiveruid"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.AcceptInvitation(request.InvitationID)
+	err := sc.scheduleService.AcceptInvitation(request.ScheduleID, request.ReceiverID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -120,14 +115,15 @@ func (sc *ScheduleController) AcceptInvitation(c *gin.Context) {
 
 func (sc *ScheduleController) RejectInvitation(c *gin.Context) {
 	var request struct {
-		InvitationID uint `json:"InvitationID"`
+		ScheduleID uint   `json:"scheduleid"`
+		ReceiverID string `json:"receiveruid"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.RejectInvitation(request.InvitationID)
+	err := sc.scheduleService.RejectInvitation(request.ScheduleID, request.ReceiverID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -162,9 +158,6 @@ func (sc *ScheduleController) EditPersonalSchedule(c *gin.Context) {
 		Type               string `json:"type"`
 		Starttime          string `json:"starttime"`
 		Endtime            string `json:"endtime"`
-		Startdate          string `json:"startdate"`
-		Enddate            string `json:"enddate"`
-		Qrcode             string `json:"qrcode"`
 		Status             string `json:"status"`
 		PlaceName          string `json:"placename"`
 		PlaceGooglePlaceId string `json:"placegoogleplaceid"`
@@ -176,7 +169,7 @@ func (sc *ScheduleController) EditPersonalSchedule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.EditPersonalSchedule(schedule.ScheduleID, schedule.HostID, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Startdate, schedule.Enddate, schedule.Qrcode, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
+	err := sc.scheduleService.EditPersonalSchedule(schedule.ScheduleID, schedule.HostID, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Update Schedule"})
 		return
@@ -192,9 +185,6 @@ func (sc *ScheduleController) EditRendezvous(c *gin.Context) {
 		Type               string `json:"type"`
 		Starttime          string `json:"starttime"`
 		Endtime            string `json:"endtime"`
-		Startdate          string `json:"startdate"`
-		Enddate            string `json:"enddate"`
-		Qrcode             string `json:"qrcode"`
 		Status             string `json:"status"`
 		PlaceName          string `json:"placename"`
 		PlaceGooglePlaceId string `json:"placegoogleplaceid"`
@@ -206,7 +196,7 @@ func (sc *ScheduleController) EditRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.EditPersonalSchedule(schedule.ScheduleID, schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Startdate, schedule.Enddate, schedule.Qrcode, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
+	err := sc.scheduleService.EditPersonalSchedule(schedule.ScheduleID, schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Update Schedule"})
 		return
@@ -222,13 +212,13 @@ func (sc *ScheduleController) GetActiveSchedule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	//status := c.Query("Status")
 	scheduleList, err2 := sc.scheduleService.GetActiveSchedule(Getschedule.HostId)
-	if err2 != nil {
+	personalschedule, rendezvous, err3 := sc.scheduleService.GetAllScheduleMapper(scheduleList)
+	if err2 != nil || err3 != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Schedule"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Get Schedule successfully", "scheduleList": scheduleList})
+	c.JSON(http.StatusOK, gin.H{"message": "Get Schedule successfully", "scheduleList": personalschedule, "Rendezvous": rendezvous})
 }
 
 func (sc *ScheduleController) GetActiveScheduleByDate(c *gin.Context) {
@@ -257,13 +247,13 @@ func (sc *ScheduleController) GetDraftRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	//status := c.Query("Status")
 	scheduleList, err2 := sc.scheduleService.GetDraftRendezvous(Getschedule.HostId)
-	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Schedule"})
+	RendezvousList, err3 := sc.scheduleService.DraftMapper(scheduleList)
+	if err3 != nil || err2 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Draft Rendezvous"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Get Schedule successfully", "scheduleList": scheduleList})
+	c.JSON(http.StatusOK, gin.H{"message": "Get Draft Rendezvous successfully", "RendezvousList": RendezvousList})
 }
 
 func (sc *ScheduleController) GetPastRendezvous(c *gin.Context) {
@@ -274,13 +264,13 @@ func (sc *ScheduleController) GetPastRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	//status := c.Query("Status")
 	scheduleList, err2 := sc.scheduleService.GetPastRendezvous(Getschedule.HostId)
-	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Past Schedule"})
+	RendezvousList, err3 := sc.scheduleService.ActiveMapper(scheduleList)
+	if err3 != nil || err2 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Past Rendezvous"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Get Past Schedule successfully", "scheduleList": scheduleList})
+	c.JSON(http.StatusOK, gin.H{"message": "Get Past Rendezvous successfully", "RendezvousList": RendezvousList})
 }
 
 func (sc *ScheduleController) GetPendingRendezvous(c *gin.Context) {
@@ -291,13 +281,14 @@ func (sc *ScheduleController) GetPendingRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	//status := c.Query("Status")
+
 	scheduleList, err2 := sc.scheduleService.GetPendingRendezvous(Getschedule.HostId)
-	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Pending Schedule"})
+	RendezvousList, err3 := sc.scheduleService.ActiveMapper(scheduleList)
+	if err3 != nil || err2 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Pending Rendezvous"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Get Pending Schedule successfully", "scheduleList": scheduleList})
+	c.JSON(http.StatusOK, gin.H{"message": "Get Pending Schedule successfully", "RendezvousList": RendezvousList})
 }
 
 func (sc *ScheduleController) GetActiveRendezvous(c *gin.Context) {
@@ -308,13 +299,13 @@ func (sc *ScheduleController) GetActiveRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	//status := c.Query("Status")
 	scheduleList, err2 := sc.scheduleService.GetActiveRendezvous(Getschedule.HostId)
-	if err2 != nil {
+	RendezvousList, err3 := sc.scheduleService.ActiveMapper(scheduleList)
+	if err3 != nil || err2 != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Get Active Schedule"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Get Active Schedule successfully", "scheduleList": scheduleList})
+	c.JSON(http.StatusOK, gin.H{"message": "Get Active Rendezvous successfully", "RendezvousList": RendezvousList})
 }
 
 func (sc *ScheduleController) AddInviteeRendezvous(c *gin.Context) {
@@ -353,18 +344,52 @@ func (sc *ScheduleController) RemoveInviteeRendezvous(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Remove User from Rendezvous successfully"})
 }
 
-func (sc *ScheduleController) ChangeStatusFromDraftToActive(c *gin.Context) {
+func (sc *ScheduleController) ChangeStatus(c *gin.Context) {
 	var schedule struct {
-		ScheduleID uint `json:"scheduleid"`
+		ScheduleID uint   `json:"scheduleid"`
+		Status     string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&schedule); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.ChangeStatusFromDraftToActive(schedule.ScheduleID)
+	err := sc.scheduleService.ChangeStatus(schedule.ScheduleID, schedule.Status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to change status"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Change to Active successfully"})
+}
+
+func (sc *ScheduleController) UpdateFromActiveToPastSchedule(c *gin.Context) {
+	var Getschedule struct {
+		HostId string `json:"hostid"`
+	}
+	if err := c.ShouldBindJSON(&Getschedule); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	scheduleList, err2 := sc.scheduleService.GetActiveSchedule(Getschedule.HostId)
+	if err2 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Change to Past Schedule/Rendezvous Success"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Get Schedule successfully", "scheduleList": scheduleList})
+}
+
+func (sc *ScheduleController) AddInviteeRendezvousByID(c *gin.Context) {
+	var invitation struct {
+		ScheduleID  uint   `json:"scheduleid"`
+		ReceiverUid string `json:"inviteeid"`
+	}
+	if err := c.ShouldBindJSON(&invitation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	err := sc.scheduleService.AddInviteeRendezvousByID(invitation.ScheduleID, invitation.ReceiverUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed Add to Rendezvous"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Add User to Rendezvous successfully"})
 }

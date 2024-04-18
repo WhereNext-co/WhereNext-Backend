@@ -25,7 +25,7 @@ func InitDB() *gorm.DB {
 	dbName := os.Getenv("MYSQL_DATABASE")
 
 	// Construct the DSN using environment variables
-	dsn := username + ":" + password + "@tcp(" + host + ":" + port + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := username + ":" + password + "@tcp(" + host + ":" + port + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=UTC"
 
 	// Open a connection to the MySQL database
 	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})

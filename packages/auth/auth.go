@@ -11,12 +11,12 @@ import (
 )
 
 type Client struct {
-    FirebaseAuthClient *auth.Client
+	FirebaseAuthClient *auth.Client
 }
 
 var (
-    App *firebase.App
-    AuthClient *Client
+	App        *firebase.App
+	AuthClient *Client
 )
 
 func InitializeFirebase() (*Client, error) {
@@ -28,12 +28,12 @@ func InitializeFirebase() (*Client, error) {
         return nil, fmt.Errorf("error initializing app: %v", err)
     }
 
-    firebaseAuthClient, err := app.Auth(ctx)
-    if err != nil {
-        log.Fatalf("error getting Auth client: %v\n", err)
-    }
+	firebaseAuthClient, err := app.Auth(ctx)
+	if err != nil {
+		log.Fatalf("error getting Auth client: %v\n", err)
+	}
 
-    AuthClient = &Client{FirebaseAuthClient: firebaseAuthClient}
+	AuthClient = &Client{FirebaseAuthClient: firebaseAuthClient}
 
-    return AuthClient, nil
+	return AuthClient, nil
 }

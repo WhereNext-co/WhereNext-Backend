@@ -31,12 +31,10 @@ type Schedule struct {
 	gorm.Model
 	HostID      string
 	Host        User `gorm:"foreignKey:HostID"`
-	Catagory    string
+	Category    string
 	Name        string
-	StartTime   string
-	EndTime     string
-	StartDate   time.Time
-	EndDate     time.Time
+	StartTime   time.Time
+	EndTime     time.Time
 	Status      string
 	Type        string
 	QrCode      string
