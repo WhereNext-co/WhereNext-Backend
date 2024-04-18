@@ -11,6 +11,7 @@ type UserControllerInterface interface {
 	CreateUserInfo(c *gin.Context)
 	CheckUserName(c *gin.Context)
 	FindUser(c *gin.Context)
+	FindUserByUid(c *gin.Context)
 	UpdateUserInfo(c *gin.Context)
 	IsFriend(c *gin.Context)
 	CreateFriendRequest(c *gin.Context)
@@ -170,6 +171,30 @@ func (uc *UserController) IsFriend(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"isFriend": isFriend})
+}
+
+func (uc *UserController) FindFriendInfo(c *gin.Context) {
+	var request struct {
+		Uid        string `json:"uid"`
+		FriendName string `json:"friendName"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	friend, err := uc.userService.FindUser(request.FriendName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	friendStatus, err := uc.userService.FriendStatus(request.Uid, request.FriendName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"friend": friend, "friendStatus": friendStatus})
 }
 
 func (uc *UserController) CreateFriendRequest(c *gin.Context) {
