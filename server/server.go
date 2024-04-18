@@ -52,7 +52,7 @@ func InitServer() {
 	userService := userService.NewUserService(userRepo)
 	userController := userController.NewUserController(userService)
 	// Initialize the Schedule services and controllers
-	scheduleService := scheduleService.NewScheduleService(scheduleRepo)
+	scheduleService := scheduleService.NewScheduleService(scheduleRepo, userService)
 	scheduleController := scheduleController.NewScheduleController(scheduleService)
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -87,7 +87,7 @@ func InitServer() {
 	r.POST("/schedules/create-personalschedule", scheduleController.CreatePersonalSchedule)
 	r.DELETE("/schedules/delete-schedule", scheduleController.DeleteSchedule)
 	r.PUT("/schedules/edit-schedule", scheduleController.EditPersonalSchedule)
-	r.PATCH("/schedules/change-status-to-active", scheduleController.ChangeStatusFromDraftToActive)
+	r.PATCH("/schedules/change-status", scheduleController.ChangeStatus)
 	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
 	r.GET("/schedules/get-schedulebydate", scheduleController.GetActiveScheduleByDate)
 	// Rendezvous routes
@@ -99,6 +99,7 @@ func InitServer() {
 	r.PUT("/rendezvous/edit-rendezvous", scheduleController.EditRendezvous)
 	r.POST("/rendezvous/add-user-rendezvous", scheduleController.AddInviteeRendezvous)
 	r.DELETE("/rendezvous/remove-user-rendezvous", scheduleController.RemoveInviteeRendezvous)
+	r.POST("/rendezvous/add-user-byscheduleID", scheduleController.AddInviteeRendezvousByID)
 	// Invitation routes
 	r.PATCH("/rendezvous/accept-invitation", scheduleController.AcceptInvitation)
 	r.PATCH("/rendezvous/reject-invitation", scheduleController.RejectInvitation)
