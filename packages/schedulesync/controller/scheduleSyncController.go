@@ -24,9 +24,23 @@ func NewScheduleSyncController(scheduleSyncService scheduleSyncService.ScheduleS
 }
 
 func (sc *scheduleSyncController) GetFriendsSchedules(c *gin.Context) {
-    uid := c.Query("uid")
-    startTimeStr := c.Query("startTime")
-    endTimeStr := c.Query("endTime")
+	// Define a struct to represent the request body
+	type GetFriendsSchedulesRequest struct {
+    	Uid       string `json:"uid"`
+    	StartTime string `json:"startTime"`
+	    EndTime   string `json:"endTime"`
+	}
+
+	// Then in your GetFriendsSchedules function:
+	var requestBody GetFriendsSchedulesRequest
+	if err := c.BindJSON(&requestBody); err != nil {
+    	// Handle error
+    	return
+	}
+
+uid := requestBody.Uid
+startTimeStr := requestBody.StartTime
+endTimeStr := requestBody.EndTime
 
     friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid, startTimeStr, endTimeStr)
     if err != nil {
@@ -68,7 +82,7 @@ func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
     var nonOverlappingSchedules [][]time.Time
 	var specificSchedules [][]time.Time
     if duration >= 24*time.Hour {
-        nonOverlappingSchedules, err = sc.scheduleSyncService.GetFreeTimeSlotsDaily(params.UID, params.FriendUIDs, startDate, endDate, duration)
+        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlotsDaily(params.UID, params.FriendUIDs, startDate, endDate, duration)
     } else {
         nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlots30min(params.UID, params.FriendUIDs, startDate, endDate, duration)
     }
