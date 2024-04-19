@@ -10,7 +10,7 @@ import (
 type ScheduleSyncServiceInterface interface {
 	GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) (map[string]string, error)
 	GetFreeTimeSlots30min(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error)
-	GetFreeTimeSlotsDaily(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, error)
+	GetFreeTimeSlotsDaily(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error)
 }
 
 type scheduleSyncService struct {
@@ -62,7 +62,10 @@ func (s *scheduleSyncService) GetFreeTimeSlots30min(uid string, friendUIDs []str
         if endTime.After(endDate) {
             endTime = endDate
         }
-        timePairs = append(timePairs, []time.Time{currTime, endTime})
+        // Check if the duration of the time slot is at least as long as the specified duration
+    	if endTime.Sub(currTime) >= duration {
+        	timePairs = append(timePairs, []time.Time{currTime, endTime})
+    	}
     }
 
     specificSchedules, err := s.scheduleSyncRepo.GetSpecificSchedules(uid, friendUIDs, startDate, endDate)
@@ -89,7 +92,7 @@ func (s *scheduleSyncService) GetFreeTimeSlots30min(uid string, friendUIDs []str
     return nonOverlappingTimePairs, specificSchedules, nil
 }
 
-func (s *scheduleSyncService) GetFreeTimeSlotsDaily(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, error) {
+func (s *scheduleSyncService) GetFreeTimeSlotsDaily(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error) {
     var timePairs [][]time.Time
 
     for currDate := startDate; currDate.Before(endDate); currDate = currDate.Add(24 * time.Hour) {
@@ -97,13 +100,15 @@ func (s *scheduleSyncService) GetFreeTimeSlotsDaily(uid string, friendUIDs []str
         if endTime.After(endDate) {
             endTime = endDate
         }
-        timePairs = append(timePairs, []time.Time{currDate, endTime})
+        if endTime.Sub(currDate) >= duration {
+			timePairs = append(timePairs, []time.Time{currDate, endTime})
+		}
     }
 
     specificSchedules, err := s.scheduleSyncRepo.GetSpecificSchedules(uid, friendUIDs, startDate, endDate)
     if err != nil {
         log.Printf("Error getting specific schedules: %v", err)
-        return nil, err
+        return nil, nil, err
     }
 
     var nonOverlappingTimePairs [][]time.Time
@@ -121,5 +126,5 @@ func (s *scheduleSyncService) GetFreeTimeSlotsDaily(uid string, friendUIDs []str
         }
     }
 
-    return nonOverlappingTimePairs, nil
+    return nonOverlappingTimePairs, specificSchedules, nil
 }
