@@ -90,7 +90,7 @@ func InitServer() {
 	r.PUT("/schedules/edit-schedule", scheduleController.EditPersonalSchedule)
 	r.PATCH("/schedules/change-status", scheduleController.ChangeStatus)
 	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
-	r.GET("/schedules/get-schedulebydate", scheduleController.GetActiveScheduleByDate)
+	r.GET("/schedules/get-schedulebytime", scheduleController.GetActiveScheduleByTime)
 	// Rendezvous routes
 	r.POST("/rendezvous/create-rendezvous", scheduleController.CreateRendezvous)
 	r.GET("/rendezvous/get-draft-rendezvous", scheduleController.GetDraftRendezvous)
