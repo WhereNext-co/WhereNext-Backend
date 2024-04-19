@@ -16,6 +16,9 @@ import (
 	scheduleController "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/controller"
 	scheduleRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/repo"
 	scheduleService "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedule/service"
+	scheduleSyncController "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedulesync/controller"
+	scheduleSyncRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedulesync/repo"
+	scheduleSyncService "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedulesync/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,6 +34,7 @@ func InitServer() {
 	dbConn := database.InitDB()
 	userRepo := userRepo.NewUserRepo(dbConn)
 	scheduleRepo := scheduleRepo.NewScheduleRepo(dbConn)
+	scheduleSyncRepo := scheduleSyncRepo.NewScheduleSyncRepo(dbConn)
 	// Initialize Firebase
 	authClient, err := auth.InitializeFirebase()
 	if err != nil {
@@ -54,6 +58,9 @@ func InitServer() {
 	// Initialize the Schedule services and controllers
 	scheduleService := scheduleService.NewScheduleService(scheduleRepo, userService)
 	scheduleController := scheduleController.NewScheduleController(scheduleService)
+	// Initialize the Schedule Sync services and controllers
+	scheduleSyncService := scheduleSyncService.NewScheduleSyncService(scheduleSyncRepo)
+	scheduleSyncController := scheduleSyncController.NewScheduleSyncController(scheduleSyncService)
 	r := gin.Default()
 	r.Use(cors.Default())
 
@@ -104,6 +111,9 @@ func InitServer() {
 	// Invitation routes
 	r.PATCH("/rendezvous/accept-invitation", scheduleController.AcceptInvitation)
 	r.PATCH("/rendezvous/reject-invitation", scheduleController.RejectInvitation)
+	// Schedule Sync routes
+	r.GET("/schedulesync/get-friends-schedules", scheduleSyncController.GetFriendsSchedules)
+	r.POST("/schedulesync/get-free-timeslot", scheduleSyncController.GetFreeTimeSlot)
 	port := os.Getenv("PORT")
 	r.Run(":" + port)
 }
