@@ -9,8 +9,8 @@ import (
 )
 
 type ScheduleSyncRepoInterface interface {
-    GetFriendsSchedules(uid string, startDate time.Time, endDate time.Time) (map[string][]database.Schedule, error)
-	GetSpecificSchedules(uid string, friendUIDs []string, startDate time.Time, endDate time.Time) (map[string][]database.Schedule, error)
+    GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string][]database.Schedule, error)
+	GetSpecificSchedules(uid string, friendUIDs []string, startDate time.Time, endDate time.Time) ([][]time.Time, error)
 }
 
 type scheduleSyncRepo struct {
@@ -21,7 +21,7 @@ func NewScheduleSyncRepo(dbConn *gorm.DB) ScheduleSyncRepoInterface {
     return &scheduleSyncRepo{dbConn: dbConn}
 }
 
-func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startDate time.Time, endDate time.Time) (map[string][]database.Schedule, error) {
+func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string][]database.Schedule, error) {
     var user database.User
     friendSchedules := make(map[string][]database.Schedule)
 
@@ -48,9 +48,10 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startDate time.Time, 
         var schedules []database.Schedule
         db := r.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").
             Where("(schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.status = 'Active' and schedules.host_id=?)", friend.Uid, friend.Uid).
-            Where("start_date >= ? AND end_date <= ?", startDate, endDate).
+            Where("start_time <= ? AND end_time >= ?", endTime, startTime).
             Preload("Invitations", "status='Active'").
             Preload("Invitations.Receiver").
+			Distinct().
             Find(&schedules)
 
         if db.Error != nil {
@@ -64,29 +65,26 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startDate time.Time, 
     return friendSchedules, nil
 }
 
-func (r *scheduleSyncRepo) GetSpecificSchedules(uid string, friendUIDs []string, startDate time.Time, endDate time.Time) (map[string][]database.Schedule, error) {
-    specificSchedules := make(map[string][]database.Schedule)
+func (r *scheduleSyncRepo) GetSpecificSchedules(uid string, friendUIDs []string, startDate time.Time, endDate time.Time) ([][]time.Time, error) {
+    var specificSchedules [][]time.Time
 
-	// add user uid to the frienduid
-	friendUIDs = append(friendUIDs, uid)
-    // Loop through the given friend's UIDs
+    friendUIDs = append(friendUIDs, uid)
     for _, friendUID := range friendUIDs {
         var friend database.User
 
-        // Get the friend with the given UID
         err := r.dbConn.First(&friend, "uid = ?", friendUID).Error
         if err != nil {
             log.Printf("Error getting friend with uid %s: %v", friendUID, err)
             return nil, err
         }
 
-        // Get the active schedules of the friend that are within the given time and date range
         var schedules []database.Schedule
         db := r.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").
             Where("(schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.status = 'Active' and schedules.host_id=?)", friend.Uid, friend.Uid).
-            Where("start_date >= ? AND end_date <= ?", startDate, endDate).
+            Where("start_time <= ? AND end_time >= ?", endDate, startDate).
             Preload("Invitations", "status='Active'").
             Preload("Invitations.Receiver").
+			Distinct().
             Find(&schedules)
 
         if db.Error != nil {
@@ -94,8 +92,9 @@ func (r *scheduleSyncRepo) GetSpecificSchedules(uid string, friendUIDs []string,
             return nil, db.Error
         }
 
-        // Add the schedules to the map
-        specificSchedules[friend.Uid] = schedules
+        for _, schedule := range schedules {
+            specificSchedules = append(specificSchedules, []time.Time{schedule.StartTime, schedule.EndTime})
+        }
     }
 
     return specificSchedules, nil

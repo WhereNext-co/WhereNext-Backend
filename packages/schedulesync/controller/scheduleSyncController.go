@@ -2,6 +2,7 @@ package scheduleSyncController
 
 import (
 	"net/http"
+	"time"
 
 	scheduleSyncService "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedulesync/service"
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 
 type ScheduleSyncControllerInterface interface {
     GetFriendsSchedules(c *gin.Context)
+	GetFreeTimeSlot(c *gin.Context)
 }
 
 type scheduleSyncController struct {
@@ -23,14 +25,61 @@ func NewScheduleSyncController(scheduleSyncService scheduleSyncService.ScheduleS
 
 func (sc *scheduleSyncController) GetFriendsSchedules(c *gin.Context) {
     uid := c.Query("uid")
-    startDateStr := c.Query("startDate")
-    endDateStr := c.Query("endDate")
+    startTimeStr := c.Query("startTime")
+    endTimeStr := c.Query("endTime")
 
-    friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid, startDateStr, endDateStr)
+    friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid, startTimeStr, endTimeStr)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
     c.JSON(http.StatusOK, friendAvailability)
+}
+
+func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
+    var params struct {
+        UID        string    `json:"uid"`
+        StartTime  string    `json:"startTime"`
+        EndTime    string    `json:"endTime"`
+        FriendUIDs []string  `json:"friendUIDs"`
+        Duration   int64     `json:"duration"` // Duration in seconds
+    }
+
+    if err := c.ShouldBindJSON(&params); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    startDate, err := time.Parse(time.RFC3339, params.StartTime)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time"})
+        return
+    }
+
+    endDate, err := time.Parse(time.RFC3339, params.EndTime)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time"})
+        return
+    }
+
+    duration := time.Duration(params.Duration) * time.Second
+
+    var nonOverlappingSchedules [][]time.Time
+	var specificSchedules [][]time.Time
+    if duration >= 24*time.Hour {
+        nonOverlappingSchedules, err = sc.scheduleSyncService.GetFreeTimeSlotsDaily(params.UID, params.FriendUIDs, startDate, endDate, duration)
+    } else {
+        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlots30min(params.UID, params.FriendUIDs, startDate, endDate, duration)
+    }
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+		"nonOverlappingSchedules": nonOverlappingSchedules,
+		"specificSchedules": specificSchedules,
+	})
 }

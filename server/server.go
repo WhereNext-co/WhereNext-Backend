@@ -113,6 +113,7 @@ func InitServer() {
 	r.PATCH("/rendezvous/reject-invitation", scheduleController.RejectInvitation)
 	// Schedule Sync routes
 	r.GET("/schedulesync/get-friends-schedules", scheduleSyncController.GetFriendsSchedules)
+	r.POST("/schedulesync/get-free-timeslot", scheduleSyncController.GetFreeTimeSlot)
 	port := os.Getenv("PORT")
 	r.Run(":" + port)
 }
