@@ -29,7 +29,7 @@ type ScheduleServiceInterface interface {
 	AddInviteeRendezvousByID(ScheduleID uint, InviteeID string) error
 	RemoveInviteeRendezvous(ScheduleID uint, HostID string, InviteeID string) error
 	GetActiveSchedule(userID string) ([]database.Schedule, error)
-	GetActiveScheduleByDate(userID string, Date string) ([]database.Schedule, error)
+	GetActiveScheduleByTime(userID string, Starttime string, Endtime string) ([]database.Schedule, error)
 	GetDraftRendezvous(userID string) ([]database.Schedule, error)
 	GetPastRendezvous(userID string) ([]database.Schedule, error)
 	GetPendingRendezvous(userID string) ([]database.Schedule, error)
@@ -241,14 +241,19 @@ func (s *scheduleService) GetActiveSchedule(HostID string) ([]database.Schedule,
 	return ScheduleList, nil
 }
 
-func (s *scheduleService) GetActiveScheduleByDate(HostID string, Date string) ([]database.Schedule, error) {
+func (s *scheduleService) GetActiveScheduleByTime(HostID string, Starttime string, Endtime string) ([]database.Schedule, error) {
 	var schedule []database.Schedule
-	parseddate, err := time.Parse("2006-01-02", Date)
+	parsedstarttime, err := time.Parse(time.RFC3339, Starttime)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedule, err
 	}
-	ScheduleList, err := s.scheduleRepo.GetActiveScheduleByDate(HostID, parseddate)
+	parsedendtime, err := time.Parse(time.RFC3339, Endtime)
+	if err != nil {
+		log.Printf("Error parsing starttime: %v", err)
+		return schedule, err
+	}
+	ScheduleList, err := s.scheduleRepo.GetActiveScheduleByTime(HostID, parsedstarttime, parsedendtime)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return ScheduleList, err

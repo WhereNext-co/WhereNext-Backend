@@ -28,7 +28,7 @@ type ScheduleRepoInterface interface {
 		Starttime time.Time, Endtime time.Time,
 		Status string, LocationID uint) error
 	GetActiveSchedule(userID string) ([]database.Schedule, error)
-	GetActiveScheduleByDate(userID string, Date time.Time) ([]database.Schedule, error)
+	GetActiveScheduleByTime(userID string, Starttime time.Time, Endtime time.Time) ([]database.Schedule, error)
 	GetDraftRendezvous(userID string) ([]database.Schedule, error)
 	GetPastRendezvous(userID string) ([]database.Schedule, error)
 	GetPendingRendezvous(userID string) ([]database.Schedule, error)
@@ -230,7 +230,7 @@ func (s *scheduleRepo) GetActiveSchedule(userID string) ([]database.Schedule, er
 	var schedules []database.Schedule
 	// Query schedules where the user is either the Receiver UID in an active invitation or the host
 	//left join เอาฝั่งซ้ายเป็นหลัก คือ schedule
-	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.end_time>now()  and schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time>now() and schedules.status = 'Active' and schedules.host_id=?)", userID, userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.end_time>?  and schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time>? and schedules.status = 'Active' and schedules.host_id=?)", time.Now(), userID, time.Now(), userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
@@ -238,12 +238,12 @@ func (s *scheduleRepo) GetActiveSchedule(userID string) ([]database.Schedule, er
 	return schedules, nil
 }
 
-func (s *scheduleRepo) GetActiveScheduleByDate(userID string, Date time.Time) ([]database.Schedule, error) {
+func (s *scheduleRepo) GetActiveScheduleByTime(userID string, Starttime time.Time, Endtime time.Time) ([]database.Schedule, error) {
 	var schedules []database.Schedule
 	// Query schedules where the user is either the Receiver UID in an active invitation or the host
 	//left join เอาฝั่งซ้ายเป็นหลัก คือ schedule
 
-	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =? and Date(schedules.start_time) <= Date(?) and Date(schedules.end_time) >= Date(?)) or (schedules.status = 'Active' and schedules.host_id=? and Date(schedules.start_time) <= Date(?) and Date(schedules.end_time) >= Date(?))", userID, Date.Format("2006-01-02"), Date.Format("2006-01-02"), userID, Date.Format("2006-01-02"), Date.Format("2006-01-02")).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =? and schedules.start_time <= ? and schedules.end_time >=?) or (schedules.status = 'Active' and schedules.host_id=? and schedules.start_time <=? and schedules.end_time >=?)", userID, Endtime, Starttime, userID, Endtime, Starttime).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
@@ -253,7 +253,7 @@ func (s *scheduleRepo) GetActiveScheduleByDate(userID string, Date time.Time) ([
 
 func (s *scheduleRepo) GetDraftRendezvous(userID string) ([]database.Schedule, error) {
 	var schedules []database.Schedule
-	err := s.dbConn.Where("schedules.start_time>now() and schedules.status = 'Draft' and schedules.catagory = 'Rendezvous' and schedules.status = 'Draft' and schedules.host_id=?", userID).Preload("Location").Preload("Invitations").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Where("schedules.status = 'Draft' and schedules.category = 'Rendezvous' and schedules.status = 'Draft' and schedules.host_id=?", userID).Preload("Location").Preload("Invitations").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
@@ -263,7 +263,7 @@ func (s *scheduleRepo) GetDraftRendezvous(userID string) ([]database.Schedule, e
 
 func (s *scheduleRepo) GetPastRendezvous(userID string) ([]database.Schedule, error) {
 	var schedules []database.Schedule
-	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.status = 'Active' and schedules.end_time<now() and schedules.catagory = 'Rendezvous' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time<now() and schedules.catagory = 'Rendezvous' and schedules.status = 'Active' and schedules.host_id=?)", userID, userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.status = 'Active' and schedules.end_time<? and schedules.category = 'Rendezvous' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time<? and schedules.category = 'Rendezvous' and schedules.status = 'Active' and schedules.host_id=?)", time.Now(), userID, time.Now(), userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
@@ -273,7 +273,7 @@ func (s *scheduleRepo) GetPastRendezvous(userID string) ([]database.Schedule, er
 
 func (s *scheduleRepo) GetPendingRendezvous(userID string) ([]database.Schedule, error) {
 	var schedules []database.Schedule
-	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("schedules.end_time>now() and schedules.status = 'Active'and schedules.catagory = 'Rendezvous' and invitations.status = 'pending' and invitations.receiver_uid =?", userID).Preload("Location").Preload("Invitations").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("schedules.end_time> ? and schedules.status = 'Active'and schedules.category = 'Rendezvous' and invitations.status = 'pending' and invitations.receiver_uid =?", time.Now(), userID).Preload("Location").Preload("Invitations").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
@@ -283,7 +283,7 @@ func (s *scheduleRepo) GetPendingRendezvous(userID string) ([]database.Schedule,
 
 func (s *scheduleRepo) GetActiveRendezvous(userID string) ([]database.Schedule, error) {
 	var schedules []database.Schedule
-	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.end_time>? and schedules.catagory='Rendezvous' and schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time>now() and schedules.catagory='Rendezvous' and schedules.status = 'Active' and schedules.host_id=?)", userID, userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
+	err := s.dbConn.Joins("LEFT JOIN invitations on invitations.schedule_id = schedules.id").Where("(schedules.end_time>? and schedules.category='Rendezvous' and schedules.status = 'Active' and invitations.status = 'Active' and invitations.receiver_uid =?) or (schedules.end_time>? and schedules.category='Rendezvous' and schedules.status = 'Active' and schedules.host_id=?)", time.Now(), userID, time.Now(), userID).Preload("Location").Preload("Invitations", "status='Active'").Preload("Invitations.Receiver").Distinct().Find(&schedules)
 	if err != nil {
 		log.Printf("Error parsing starttime: %v", err)
 		return schedules, err.Error
