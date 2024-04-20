@@ -64,12 +64,6 @@ func InitServer() {
 	r := gin.Default()
 	r.Use(cors.Default())
 
-	// r.POST("/register", AuthController.Register)
-	// r.POST("/login", AuthController.Login)
-	// authorized := r.Group("/users", middleware.JWTAuthen())
-	// authorized.GET("/readall", UserController.ReadAll)
-	// authorized.GET("/profile", UserController.Profile)
-
 	// Auth routes
 	r.POST("/auth/createFirebaseUser", authController.CreateFirebaseUser)
 	r.POST("/auth/updateFirebaseUserPassword", authController.UpdateFirebaseUserPassword)
@@ -97,7 +91,7 @@ func InitServer() {
 	r.PUT("/schedules/edit-schedule", scheduleController.EditPersonalSchedule)
 	r.PATCH("/schedules/change-status", scheduleController.ChangeStatus)
 	r.GET("/schedules/get-allschedule", scheduleController.GetActiveSchedule)
-	r.GET("/schedules/get-schedulebytime", scheduleController.GetActiveScheduleByTime)
+	r.POST("/schedules/get-schedulebytime", scheduleController.GetActiveScheduleByTime)
 	// Rendezvous routes
 	r.POST("/rendezvous/create-rendezvous", scheduleController.CreateRendezvous)
 	r.GET("/rendezvous/get-draft-rendezvous", scheduleController.GetDraftRendezvous)
@@ -117,11 +111,3 @@ func InitServer() {
 	port := os.Getenv("PORT")
 	r.Run(":" + port)
 }
-
-// All New Endpoints
-// User Profile Page: GET /users/profile, PUT /users/profile
-// Friends Page: GET /users/friends, GET /users/friends/{friend}
-// Delete Friend: DELETE /users/friends/{friend}
-// Add Friend: POST /users/friendrequest/create/{friend}, PUT /users/friendrequest/accept/{friend}
-// Add Friend: DELETE /users/friendrequest/decline/{friend}, DELETE /users/friendrequest/cancel/{friend}
-// Friend Request Page: GET /users/friendrequest
