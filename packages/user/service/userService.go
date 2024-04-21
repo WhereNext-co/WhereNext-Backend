@@ -12,6 +12,7 @@ type UserServiceInterface interface {
 	CreateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string,
 		region string, telNo string, profilePicture string, bio string) error
 	CheckUserName(userName string) (bool, error)
+	CheckTelephoneNumber(telNo string) (bool, error)
 	FindUser(userName string) (database.User, error)
 	FindUserByUid(Uid string) (database.User, error)
 	UpdateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string,
@@ -53,6 +54,14 @@ func (s *userService) CreateUserInfo(Uid string, userName string, email string,
 
 func (s *userService) CheckUserName(userName string) (bool, error) {
 	exists, err := s.userRepo.CheckUserName(userName)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *userService) CheckTelephoneNumber(telNo string) (bool, error) {
+	exists, err := s.userRepo.CheckTelephoneNumber(telNo)
 	if err != nil {
 		return false, err
 	}

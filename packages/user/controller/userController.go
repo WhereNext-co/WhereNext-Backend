@@ -10,6 +10,7 @@ import (
 type UserControllerInterface interface {
 	CreateUserInfo(c *gin.Context)
 	CheckUserName(c *gin.Context)
+	CheckTelephoneNumber(c *gin.Context)
 	FindUser(c *gin.Context)
 	FindUserByUid(c *gin.Context)
 	UpdateUserInfo(c *gin.Context)
@@ -79,6 +80,25 @@ func (uc *UserController) CheckUserName(c *gin.Context) {
 	}
 
 	exists, err := uc.userService.CheckUserName(request.UserName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"exists": exists})
+}
+
+func (uc *UserController) CheckTelephoneNumber(c *gin.Context) {
+	var request struct {
+		TelNo string `json:"telNo"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	exists, err := uc.userService.CheckTelephoneNumber(request.TelNo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
