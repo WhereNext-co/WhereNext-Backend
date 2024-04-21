@@ -12,6 +12,7 @@ type UserRepoInterface interface {
 	CreateUserInfo(Uid string, userName string, email string, title string, name string,
 		birthdate time.Time, region string, telNo string, profilePicture string, bio string) error
 	CheckUserName(userName string) (bool, error)
+	CheckTelephoneNumber(telNo string) (bool, error)
 	FindUser(userName string) (database.User, error)
 	FindUserByUid(Uid string) (database.User, error)
 	UpdateUserInfo(Uid string, userName string, email string, title string, name string,
@@ -66,6 +67,18 @@ func (u *userRepo) CheckUserName(userName string) (bool, error) {
 		return false, result.Error
 	}
 	return true, nil
+}
+
+func (u *userRepo) CheckTelephoneNumber(telNo string) (bool, error) {
+    var user database.User
+    result := u.dbConn.Where("tel_no = ?", telNo).First(&user)
+    if result.Error != nil {
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+            return false, nil
+        }
+        return false, result.Error
+    }
+    return true, nil
 }
 
 func (u *userRepo) FindUser(userName string) (database.User, error) {

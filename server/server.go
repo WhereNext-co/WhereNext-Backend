@@ -71,6 +71,7 @@ func InitServer() {
 	// User routes
 	r.POST("/users/create-info", middleware.VerifyToken(), userController.CreateUserInfo)
 	r.POST("/users/check-username", userController.CheckUserName)
+	r.POST("/users/check-telno", userController.CheckTelephoneNumber)
 	r.POST("/users/get-profile", userController.FindUserByUid)
 	r.PUT("/users/profile", userController.UpdateUserInfo)
 	// Friend routes

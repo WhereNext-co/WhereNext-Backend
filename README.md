@@ -1,14 +1,17 @@
 # Project Title
 
+WhereNext
+
 ## Description
 
-Write a brief description of your project here.
+This application is designed to manage schedules. It allows users to retrieve active schedules for a specific friend within a specific time range. This includes schedules where the friend is the host, schedules where the friend is an invitee, and the friend's personal schedules. The application uses a SQL database to store and retrieve schedule, invitation, and user information.
 
 ## Installation
 
-Provide instructions on how to install and set up your project.
-
-go install
+1. Ensure you have Go installed on your machine. You can download it from [here](https://golang.org/dl/).
+2. Clone this repository to your local machine.
+3. Navigate to the project directory.
+4. Run `go install` to install the necessary dependencies.
 
 ## Usage
 
