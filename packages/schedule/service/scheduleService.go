@@ -25,6 +25,10 @@ type ScheduleServiceInterface interface {
 		Starttime string, Endtime string,
 		Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
 		PlaceMapLink string, PlacePhotoLink string) (uint, error)
+	EditRendezvous(ScheduleID uint, HostUid string, Name string, Type string,
+		Starttime string, Endtime string,
+		Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+		PlaceMapLink string, PlacePhotoLink string) error
 	AddInviteeRendezvous(ScheduleID uint, HostID string, InviteeID string) error
 	AddInviteeRendezvousByID(ScheduleID uint, InviteeID string) error
 	RemoveInviteeRendezvous(ScheduleID uint, HostID string, InviteeID string) error
@@ -152,6 +156,35 @@ func (s *scheduleService) EditPersonalSchedule(ScheduleID uint, HostUid string, 
 		return err
 	}
 	return nil
+}
+
+func (s *scheduleService) EditRendezvous(ScheduleID uint, HostUid string, Name string, Type string,
+    Starttime string, Endtime string, Status string, PlaceName string, PlaceGooglePlaceId string, PlaceLocation string,
+    PlaceMapLink string, PlacePhotoLink string) error {
+    parsedStartTime, err := time.Parse(time.RFC3339, Starttime)
+    if err != nil {
+        log.Printf("Error parsing starttime: %v", err)
+        return err
+    }
+    parsedEndTime, err := time.Parse(time.RFC3339, Endtime)
+    if err != nil {
+        log.Printf("Error parsing enddate: %v", err)
+        return err
+    }
+    IsExist, err := s.scheduleRepo.FindLocationExist(PlaceGooglePlaceId)
+    if IsExist == false {
+        err := s.scheduleRepo.CreateLocation(PlaceName, PlaceGooglePlaceId, PlaceLocation, PlaceMapLink, PlacePhotoLink)
+        if err != nil {
+            return err
+        }
+        return nil
+    }
+    location, err := s.scheduleRepo.FindLocation(PlaceGooglePlaceId)
+    err = s.scheduleRepo.EditRendezvous(ScheduleID, HostUid, Name, Type, parsedStartTime, parsedEndTime, Status, location.ID)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 func (s *scheduleService) AddInviteeRendezvous(ScheduleID uint, HostID string, InvitedID string) error {

@@ -27,6 +27,9 @@ type ScheduleRepoInterface interface {
 	EditPersonalSchedule(ScheduleID uint, HostUid string, Name string, Type string,
 		Starttime time.Time, Endtime time.Time,
 		Status string, LocationID uint) error
+	EditRendezvous(ScheduleID uint, HostUid string, Name string, Type string,
+		Starttime time.Time, Endtime time.Time,
+		Status string, LocationID uint) error
 	GetActiveSchedule(userID string) ([]database.Schedule, error)
 	GetActiveScheduleByTime(userID string, Starttime time.Time, Endtime time.Time) ([]database.Schedule, error)
 	GetDraftRendezvous(userID string) ([]database.Schedule, error)
@@ -135,23 +138,24 @@ func (s *scheduleRepo) CreatePersonalSchedule(HostUid string, Name string, Type 
 }
 
 func (s *scheduleRepo) EditPersonalSchedule(ScheduleID uint, HostUid string, Name string, Type string,
-	Starttime time.Time, Endtime time.Time,
-	Status string, LocationID uint) error {
-	var schedule database.Schedule
-	schedule.ID = ScheduleID
-	schedule.Name = Name
-	schedule.HostID = HostUid
-	schedule.Category = "Schedule"
-	schedule.StartTime = Starttime
-	schedule.EndTime = Endtime
-	schedule.Type = Type
-	schedule.Status = Status
-	schedule.LocationID = LocationID
-	result := s.dbConn.Save(&schedule)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+    Starttime time.Time, Endtime time.Time,
+    Status string, LocationID uint) error {
+    var schedule database.Schedule
+    if err := s.dbConn.First(&schedule, ScheduleID).Error; err != nil {
+        return err
+    }
+    schedule.Name = Name
+    schedule.HostID = HostUid
+    schedule.Category = "Schedule"
+    schedule.StartTime = Starttime
+    schedule.EndTime = Endtime
+    schedule.Type = Type
+    schedule.Status = Status
+    schedule.LocationID = LocationID
+    if err := s.dbConn.Save(&schedule).Error; err != nil {
+        return err
+    }
+    return nil
 }
 
 func (s *scheduleRepo) CreateRendezvous(HostUid string, Name string, Type string,
@@ -170,6 +174,27 @@ func (s *scheduleRepo) CreateRendezvous(HostUid string, Name string, Type string
 		return 0, result.Error
 	}
 	return schedule.ID, nil
+}
+
+func (s *scheduleRepo) EditRendezvous(ScheduleID uint, HostUid string, Name string, Type string,
+    Starttime time.Time, Endtime time.Time,
+    Status string, LocationID uint) error {
+    var schedule database.Schedule
+    if err := s.dbConn.First(&schedule, ScheduleID).Error; err != nil {
+        return err
+    }
+    schedule.Name = Name
+    schedule.HostID = HostUid
+    schedule.Category = "Rendezvous"
+    schedule.StartTime = Starttime
+    schedule.EndTime = Endtime
+    schedule.Type = Type
+    schedule.Status = Status
+    schedule.LocationID = LocationID
+    if err := s.dbConn.Save(&schedule).Error; err != nil {
+        return err
+    }
+    return nil
 }
 
 func (s *scheduleRepo) CreateInvitation(ScheduleID uint, HostID string, InvitedID string) error {

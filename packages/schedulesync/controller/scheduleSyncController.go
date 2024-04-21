@@ -26,7 +26,6 @@ func NewScheduleSyncController(scheduleSyncService scheduleSyncService.ScheduleS
 func (sc *scheduleSyncController) GetFriendsSchedules(c *gin.Context) {
 	// Define a struct to represent the request body
 	type GetFriendsSchedulesRequest struct {
-    	Uid       string `json:"uid"`
     	StartTime string `json:"startTime"`
 	    EndTime   string `json:"endTime"`
 	}
@@ -38,11 +37,16 @@ func (sc *scheduleSyncController) GetFriendsSchedules(c *gin.Context) {
     	return
 	}
 
-uid := requestBody.Uid
-startTimeStr := requestBody.StartTime
-endTimeStr := requestBody.EndTime
+    uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-    friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid, startTimeStr, endTimeStr)
+    startTimeStr := requestBody.StartTime
+    endTimeStr := requestBody.EndTime
+
+    friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid.(string), startTimeStr, endTimeStr)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
@@ -53,7 +57,6 @@ endTimeStr := requestBody.EndTime
 
 func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
     var params struct {
-        UID        string    `json:"uid"`
         StartTime  string    `json:"startTime"`
         EndTime    string    `json:"endTime"`
         FriendUIDs []string  `json:"friendUIDs"`
@@ -62,6 +65,12 @@ func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
 
     if err := c.ShouldBindJSON(&params); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
         return
     }
 
@@ -82,9 +91,9 @@ func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
     var nonOverlappingSchedules [][]time.Time
 	var specificSchedules [][]time.Time
     if duration >= 24*time.Hour {
-        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlotsDaily(params.UID, params.FriendUIDs, startDate, endDate, duration)
+        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlotsDaily(uid.(string), params.FriendUIDs, startDate, endDate, duration)
     } else {
-        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlots30min(params.UID, params.FriendUIDs, startDate, endDate, duration)
+        nonOverlappingSchedules, specificSchedules, err = sc.scheduleSyncService.GetFreeTimeSlots30min(uid.(string), params.FriendUIDs, startDate, endDate, duration)
     }
 
     if err != nil {

@@ -127,16 +127,14 @@ func (uc *UserController) FindUser(c *gin.Context) {
 }
 
 func (uc *UserController) FindUserByUid(c *gin.Context) {
-	var request struct {
-		Uid string `json:"uid"`
-	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-	user, err := uc.userService.FindUserByUid(request.Uid)
+	user, err := uc.userService.FindUserByUid(uid.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -147,7 +145,6 @@ func (uc *UserController) FindUserByUid(c *gin.Context) {
 
 func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 	var user struct {
-		Uid            string `json:"uid"`
 		UserName       string `json:"userName"`
 		Email          string `json:"email"`
 		Title          string `json:"title"`
@@ -164,7 +161,13 @@ func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.UpdateUserInfo(user.Uid, user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.UpdateUserInfo(uid.(string), user.UserName, user.Email, user.Title, user.Name, user.Birthdate, user.Region, user.TelNo, user.ProfilePicture, user.Bio)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -175,7 +178,6 @@ func (uc *UserController) UpdateUserInfo(c *gin.Context) {
 
 func (uc *UserController) IsFriend(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -183,8 +185,13 @@ func (uc *UserController) IsFriend(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-	isFriend, err := uc.userService.IsFriend(request.Uid, request.FriendName)
+	isFriend, err := uc.userService.IsFriend(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -195,7 +202,6 @@ func (uc *UserController) IsFriend(c *gin.Context) {
 
 func (uc *UserController) FindFriendInfo(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -204,12 +210,18 @@ func (uc *UserController) FindFriendInfo(c *gin.Context) {
 		return
 	}
 
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
 	friend, err := uc.userService.FindUser(request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	friendStatus, err := uc.userService.FriendStatus(request.Uid, request.FriendName)
+	friendStatus, err := uc.userService.FriendStatus(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -219,7 +231,6 @@ func (uc *UserController) FindFriendInfo(c *gin.Context) {
 
 func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -228,7 +239,13 @@ func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.CreateFriendRequest(request.Uid, request.FriendName)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.CreateFriendRequest(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -239,7 +256,6 @@ func (uc *UserController) CreateFriendRequest(c *gin.Context) {
 
 func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -248,7 +264,13 @@ func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.AcceptFriendRequest(request.Uid, request.FriendName)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.AcceptFriendRequest(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -259,7 +281,6 @@ func (uc *UserController) AcceptFriendRequest(c *gin.Context) {
 
 func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -268,7 +289,13 @@ func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.DeclineFriendRequest(request.Uid, request.FriendName)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.DeclineFriendRequest(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -279,7 +306,6 @@ func (uc *UserController) DeclineFriendRequest(c *gin.Context) {
 
 func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -288,7 +314,13 @@ func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.CancelFriendRequest(request.Uid, request.FriendName)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.CancelFriendRequest(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -299,7 +331,6 @@ func (uc *UserController) CancelFriendRequest(c *gin.Context) {
 
 func (uc *UserController) RemoveFriend(c *gin.Context) {
 	var request struct {
-		Uid        string `json:"uid"`
 		FriendName string `json:"friendName"`
 	}
 
@@ -308,7 +339,13 @@ func (uc *UserController) RemoveFriend(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.RemoveFriend(request.Uid, request.FriendName)
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
+
+	err := uc.userService.RemoveFriend(uid.(string), request.FriendName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -318,16 +355,14 @@ func (uc *UserController) RemoveFriend(c *gin.Context) {
 }
 
 func (uc *UserController) FriendList(c *gin.Context) {
-	var request struct {
-		Uid string `json:"uid"`
-	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-	friendList, err := uc.userService.FriendList(request.Uid)
+	friendList, err := uc.userService.FriendList(uid.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -337,16 +372,14 @@ func (uc *UserController) FriendList(c *gin.Context) {
 }
 
 func (uc *UserController) RequestsSent(c *gin.Context) {
-	var request struct {
-		Uid string `json:"uid"`
-	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-	requestsSent, err := uc.userService.RequestsSent(request.Uid)
+	requestsSent, err := uc.userService.RequestsSent(uid.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -356,16 +389,14 @@ func (uc *UserController) RequestsSent(c *gin.Context) {
 }
 
 func (uc *UserController) RequestsReceived(c *gin.Context) {
-	var request struct {
-		Uid string `json:"uid"`
-	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+	uid, exists := c.Get("uid")
+    if !exists {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "UID not found"})
+        return
+    }
 
-	requestsReceived, err := uc.userService.RequestsReceived(request.Uid)
+	requestsReceived, err := uc.userService.RequestsReceived(uid.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
