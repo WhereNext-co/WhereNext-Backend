@@ -22,7 +22,7 @@ func NewScheduleSyncService(scheduleSyncRepo scheduleSyncRepo.ScheduleSyncRepoIn
 }
 
 func (s *scheduleSyncService) GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) (map[string]string, error) {
-    layout := "2006-01-02T15:04:05Z" // This is an example layout. Adjust it to match your Time format.
+    layout := time.RFC3339 // This is an example layout. Adjust it to match your Time format.
 
     startTime, err := time.Parse(layout, startTimeStr)
     if err != nil {
