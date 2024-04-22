@@ -179,8 +179,8 @@ func (sc *ScheduleController) EditPersonalSchedule(c *gin.Context) {
 
 func (sc *ScheduleController) EditRendezvous(c *gin.Context) {
 	var schedule struct {
+		HostID             string `json:"hostuid"`
 		ScheduleID         uint   `json:"scheduleid"`
-		HostUid            string `json:"hostuid"`
 		Name               string `json:"name"`
 		Type               string `json:"type"`
 		Starttime          string `json:"starttime"`
@@ -196,7 +196,8 @@ func (sc *ScheduleController) EditRendezvous(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	err := sc.scheduleService.EditPersonalSchedule(schedule.ScheduleID, schedule.HostUid, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
+
+	err := sc.scheduleService.EditRendezvous(schedule.ScheduleID, schedule.HostID, schedule.Name, schedule.Type, schedule.Starttime, schedule.Endtime, schedule.Status, schedule.PlaceName, schedule.PlaceGooglePlaceId, schedule.PlaceLocation, schedule.PlaceMapLink, schedule.PlacePhotoLink)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Update Schedule"})
 		return

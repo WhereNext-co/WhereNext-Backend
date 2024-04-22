@@ -40,7 +40,7 @@ func NewUserService(userRepo userRepo.UserRepoInterface) *userService {
 func (s *userService) CreateUserInfo(Uid string, userName string, email string,
 	title string, name string, birthdate string, region string,
 	telNo string, profilePicture string, bio string) error {
-	parsedBirthdate, err := time.Parse("2006-01-02T15:04:05Z", birthdate)
+	parsedBirthdate, err := time.Parse(time.RFC3339, birthdate)
 	if err != nil {
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
@@ -85,7 +85,7 @@ func (s *userService) FindUserByUid(Uid string) (database.User, error) {
 }
 
 func (s *userService) UpdateUserInfo(Uid string, userName string, email string, title string, name string, birthdate string, region string, telNo string, profilePicture string, bio string) error {
-	parsedBirthdate, err := time.Parse("2006-01-02T15:04:05Z", birthdate)
+	parsedBirthdate, err := time.Parse(time.RFC3339, birthdate)
 	if err != nil {
 		log.Printf("Error parsing birthdate: %v", err)
 		return err
