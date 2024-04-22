@@ -77,7 +77,7 @@ func (sc *scheduleSyncController) GetFreeTimeSlot(c *gin.Context) {
         return
     }
 
-    duration := time.Duration(params.Duration) * time.Second
+    duration := time.Duration(params.Duration) * time.Minute
 
     var nonOverlappingSchedules [][]time.Time
 	var specificSchedules [][]time.Time
