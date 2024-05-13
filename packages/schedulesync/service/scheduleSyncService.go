@@ -4,11 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/WhereNext-co/WhereNext-Backend.git/database"
 	scheduleSyncRepo "github.com/WhereNext-co/WhereNext-Backend.git/packages/schedulesync/repo"
 )
 
 type ScheduleSyncServiceInterface interface {
-	GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) (map[string]string, error)
+	GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) ([]UserWithAvailability, error)
 	GetFreeTimeSlots30min(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error)
 	GetFreeTimeSlotsDaily(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error)
 }
@@ -21,37 +22,45 @@ func NewScheduleSyncService(scheduleSyncRepo scheduleSyncRepo.ScheduleSyncRepoIn
 	return &scheduleSyncService{scheduleSyncRepo}
 }
 
-func (s *scheduleSyncService) GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) (map[string]string, error) {
+type UserWithAvailability struct {
+    database.User
+    Availability string
+}
+
+func (s *scheduleSyncService) GetFriendsSchedules(uid string, startTimeStr string, endTimeStr string) ([]UserWithAvailability, error) {
     layout := time.RFC3339 // This is an example layout. Adjust it to match your Time format.
 
     startTime, err := time.Parse(layout, startTimeStr)
     if err != nil {
-		log.Printf("Error parsing start time: %v", err)
+        log.Printf("Error parsing start time: %v", err)
         return nil, err
     }
 
     endTime, err := time.Parse(layout, endTimeStr)
     if err != nil {
-		log.Printf("Error parsing end time: %v", err)
+        log.Printf("Error parsing end time: %v", err)
         return nil, err
     }
 
     friendSchedules, err := s.scheduleSyncRepo.GetFriendsSchedules(uid, startTime, endTime)
     if err != nil {
-		log.Printf("Error getting friends' schedules: %v", err)
+        log.Printf("Error getting friends' schedules: %v", err)
         return nil, err
     }
 
-    friendAvailability := make(map[string]string)
-    for uid, schedules := range friendSchedules {
-        if len(schedules) == 0 {
-            friendAvailability[uid] = "available"
-        } else {
-            friendAvailability[uid] = "busy"
+    friends := make([]UserWithAvailability, 0, len(friendSchedules))
+    for _, userSchedules := range friendSchedules {
+        user := UserWithAvailability{
+            User: userSchedules.User,
+            Availability: "busy",
         }
+        if len(userSchedules.Schedules) == 0 {
+            user.Availability = "available"
+        }
+        friends = append(friends, user)
     }
 
-    return friendAvailability, nil
+    return friends, nil
 }
 
 func (s *scheduleSyncService) GetFreeTimeSlots30min(uid string, friendUIDs []string, startDate time.Time, endDate time.Time, duration time.Duration) ([][]time.Time, [][]time.Time, error) {

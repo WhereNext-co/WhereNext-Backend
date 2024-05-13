@@ -35,12 +35,13 @@ func (sc *scheduleSyncController) GetFriendsSchedules(c *gin.Context) {
 	var requestBody GetFriendsSchedulesRequest
 	if err := c.BindJSON(&requestBody); err != nil {
     	// Handle error
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
     	return
 	}
 
-uid := requestBody.Uid
-startTimeStr := requestBody.StartTime
-endTimeStr := requestBody.EndTime
+    uid := requestBody.Uid
+    startTimeStr := requestBody.StartTime
+    endTimeStr := requestBody.EndTime
 
     friendAvailability, err := sc.scheduleSyncService.GetFriendsSchedules(uid, startTimeStr, endTimeStr)
     if err != nil {
