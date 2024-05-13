@@ -9,7 +9,7 @@ import (
 )
 
 type ScheduleSyncRepoInterface interface {
-    GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string][]database.Schedule, error)
+    GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string]UserSchedules, error)
 	GetSpecificSchedules(uid string, friendUIDs []string, startDate time.Time, endDate time.Time) ([][]time.Time, error)
 }
 
@@ -21,14 +21,19 @@ func NewScheduleSyncRepo(dbConn *gorm.DB) ScheduleSyncRepoInterface {
     return &scheduleSyncRepo{dbConn: dbConn}
 }
 
-func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string][]database.Schedule, error) {
+type UserSchedules struct {
+    User      database.User
+    Schedules []database.Schedule
+}
+
+func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, endTime time.Time) (map[string]UserSchedules, error) {
     var user database.User
-    friendSchedules := make(map[string][]database.Schedule)
+    friendSchedules := make(map[string]UserSchedules)
 
     // Get the user with the given uid
     err := r.dbConn.First(&user, "uid = ?", uid).Error
     if err != nil {
-		log.Printf("Error getting user with uid %s: %v", uid, err)
+        log.Printf("Error getting user with uid %s: %v", uid, err)
         return nil, err
     }
 
@@ -36,7 +41,7 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, 
     var friends []database.User
     err = r.dbConn.Model(&user).Association("Friends").Find(&friends)
     if err != nil {
-		log.Printf("Error getting friends of user with uid %s: %v", uid, err)
+        log.Printf("Error getting friends of user with uid %s: %v", uid, err)
         return nil, err
     }
 
@@ -51,7 +56,7 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, 
             Where("start_time <= ? AND end_time >= ?", endTime, startTime).
             Preload("Invitations", "status='Active'").
             Preload("Invitations.Receiver").
-			Distinct().
+            Distinct().
             Find(&schedules)
 
         if db.Error != nil {
@@ -59,7 +64,10 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, 
             return nil, db.Error
         }
 
-        friendSchedules[friend.Uid] = schedules
+        friendSchedules[friend.Uid] = UserSchedules{
+            User:      friend,
+            Schedules: schedules,
+        }
     }
 
     return friendSchedules, nil
