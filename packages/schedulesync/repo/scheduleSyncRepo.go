@@ -46,7 +46,7 @@ func (r *scheduleSyncRepo) GetFriendsSchedules(uid string, startTime time.Time, 
     }
 
     // Add the user to the list of friends to also get the user's own schedules
-    friends = append(friends, user)
+    //friends = append(friends, user)
 
     // Get the active schedules of the friends (including the user) that are within the given time and date range
     for _, friend := range friends {
